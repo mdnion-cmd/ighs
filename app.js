@@ -182,6 +182,23 @@ function initBangladeshMap() {
 // =============================================================================
 let lastHandledDangerState = false;
 
+function getVehicleMetadata(vid) {
+  try {
+    const reg = JSON.parse(localStorage.getItem("ighs_vehicle_meta") || "{}");
+    return reg[vid] || {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveVehicleMetadata(vid, meta) {
+  try {
+    const reg = JSON.parse(localStorage.getItem("ighs_vehicle_meta") || "{}");
+    reg[vid] = { ...(reg[vid] || {}), ...meta };
+    localStorage.setItem("ighs_vehicle_meta", JSON.stringify(reg));
+  } catch (e) {}
+}
+
 function startFleetTracking() {
   if (unsubscribeVehiclesListener) return;
 
@@ -219,18 +236,36 @@ function startFleetTracking() {
 
     // Track active IDs to clean up removed markers
     const currentDocIds = new Set();
+    let index = 0;
 
     snapshot.docs.forEach(docSnap => {
       const v = docSnap.data();
       const vid = docSnap.id;
       currentDocIds.add(vid);
 
-      const lat = parseFloat(v.lat) || RUET_COORDS.lat;
-      const lng = parseFloat(v.lng) || RUET_COORDS.lng;
-      const name = v.vehicleName || "Test Vehicle";
-      const locationName = v.locationName || "RUET Campus, Rajshahi";
-      const distance = v.distance !== undefined ? v.distance : 100;
-      const status = String(v.status || "SAFE").toUpperCase();
+      const localMeta = getVehicleMetadata(vid);
+
+      // Safe Coordinates Resolution with Fallback Protection
+      let parsedLat = parseFloat(v.lat);
+      let parsedLng = parseFloat(v.lng);
+      if (isNaN(parsedLat) || isNaN(parsedLng) || (parsedLat === 0 && parsedLng === 0)) {
+        parsedLat = localMeta.lat || RUET_COORDS.lat;
+        parsedLng = localMeta.lng || RUET_COORDS.lng;
+      }
+
+      // Preserve Custom Vehicle Name even if hardware sends "Test Vehicle"
+      let name = v.vehicleName;
+      if (localMeta.name && (!name || name === "Test Vehicle")) {
+        name = localMeta.name;
+      } else if (!name) {
+        name = `Vehicle ${vid}`;
+      }
+
+      let locationName = v.locationName || localMeta.location || "RUET Campus, Rajshahi";
+      let driverPhone  = v.driverPhone  || localMeta.phone    || "";
+      let driverEmail  = v.driverEmail  || localMeta.email    || "";
+      const distance   = v.distance !== undefined ? v.distance : 100;
+      const status     = String(v.status || "SAFE").toUpperCase();
 
       const isDanger = status === "DANGER" || status === "ACCIDENT" || distance <= 15;
       const isWarn   = !isDanger && (status === "WARN" || (distance > 15 && distance <= 30));
@@ -238,7 +273,7 @@ function startFleetTracking() {
       if (!isDanger) activeCount++;
       if (isDanger) anyDanger = true;
 
-      updateVehicleMarker(vid, name, lat, lng, distance, isDanger, isWarn, locationName);
+      updateVehicleMarker(vid, name, parsedLat, parsedLng, distance, isDanger, isWarn, locationName);
 
       let badgeClass = "role-pill--user";
       let statusText = "SAFE";
@@ -572,6 +607,15 @@ window.handleSaveVehicle = async (e) => {
       }
     }
 
+    saveVehicleMetadata(targetId, {
+      name: vehicleName,
+      location: locationName,
+      phone: driverPhone,
+      email: driverEmail,
+      lat: lat,
+      lng: lng
+    });
+
     window.closeVehicleModal();
 
     // Smoothly fly map to the newly added / edited vehicle
@@ -594,6 +638,10 @@ window.deleteVehicle = async (vid, name) => {
   if (!confirm(`Are you sure you want to delete and unregister '${name || vid}'?`)) return;
 
   try {
+    const reg = JSON.parse(localStorage.getItem("ighs_vehicle_meta") || "{}");
+    delete reg[vid];
+    localStorage.setItem("ighs_vehicle_meta", JSON.stringify(reg));
+
     await deleteDoc(doc(db, "vehicles", vid));
     showToast(`Vehicle '${name || vid}' removed.`, "info");
   } catch (err) {
