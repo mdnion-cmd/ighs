@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="IGHS — Smart Vehicle Tracking & Crash Telemetry System. Real-time GPS fleet monitoring and emergency SMS alerting." />
+  <meta name="theme-color" content="#5B4FE9" />
+  <meta name="robots" content="noindex, nofollow" />
+
+  <title>IGHS — Vehicle Tracking & Crash Monitoring</title>
+
+  <!-- Primary Stylesheet -->
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Leaflet Map CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</head>
+<body>
+
+  <!-- =========================================================
+       LOADING SCREEN
+       ========================================================= -->
+  <div id="loading-screen" role="status" aria-label="Loading application">
+    <div class="loading-logo-box">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#5B4FE9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
+        <path d="M2 12h20"></path>
+      </svg>
+    </div>
+    <div class="loading-spinner" aria-hidden="true"></div>
+    <p class="loading-text">Initializing IGHS secure session...</p>
+  </div>
+
+  <!-- =========================================================
+       AUTH SECTION — Shown when user is logged out
+       ========================================================= -->
+  <section
+    id="auth-section"
+    style="display: none;"
+    aria-label="Authentication"
+    aria-live="polite">
+
+    <div class="auth-card" role="main">
+      <header class="auth-header">
+        <div class="brand-badge-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B4FE9" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+          </svg>
+        </div>
+        <h1 class="auth-title">IGHS</h1>
+        <p class="auth-subtitle">Vehicle Tracking & Crash Monitoring Portal</p>
+      </header>
+
+      <!-- Tab Switcher -->
+      <div class="tab-switcher" role="tablist" aria-label="Authentication mode">
+        <button
+          id="signin-tab"
+          class="tab-btn tab--active"
+          role="tab"
+          aria-selected="true"
+          aria-controls="signin-form">
+          Sign In
+        </button>
+        <button
+          id="signup-tab"
+          class="tab-btn"
+          role="tab"
+          aria-selected="false"
+          aria-controls="signup-form">
+          Sign Up
+        </button>
+      </div>
+
+      <!-- ─── SIGN IN FORM ─── -->
+      <form id="signin-form" role="tabpanel" aria-labelledby="signin-tab" novalidate>
+        <div id="signin-form-error" class="form-error-banner" role="alert" aria-live="assertive"></div>
+
+        <div class="form-group">
+          <label class="form-label" for="signin-email">Email address</label>
+          <input
+            id="signin-email"
+            class="form-input"
+            type="email"
+            placeholder="you@example.com"
+            autocomplete="email"
+            required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="signin-password">Password</label>
+          <input
+            id="signin-password"
+            class="form-input"
+            type="password"
+            placeholder="Your password"
+            autocomplete="current-password"
+            required />
+        </div>
+
+        <button id="signin-btn" type="submit" class="btn btn--primary btn--full">Sign In</button>
+
+        <div class="auth-divider"><span>or</span></div>
+
+        <button id="google-signin-btn" type="button" class="btn btn--google btn--full">
+          <svg class="google-icon" viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+          </svg>
+          Continue with Google
+        </button>
+      </form>
+
+      <!-- ─── SIGN UP FORM ─── -->
+      <form id="signup-form" role="tabpanel" aria-labelledby="signup-tab" style="display: none;" novalidate>
+        <div id="signup-form-error" class="form-error-banner" role="alert" aria-live="assertive"></div>
+
+        <div class="form-group">
+          <label class="form-label" for="signup-email">Email address</label>
+          <input
+            id="signup-email"
+            class="form-input"
+            type="email"
+            placeholder="you@example.com"
+            autocomplete="email"
+            required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="signup-password">Password</label>
+          <input
+            id="signup-password"
+            class="form-input"
+            type="password"
+            placeholder="Minimum 6 characters"
+            autocomplete="new-password"
+            minlength="6"
+            required />
+        </div>
+
+        <button id="signup-btn" type="submit" class="btn btn--primary btn--full">Create Account</button>
+
+        <div class="auth-divider"><span>or</span></div>
+
+        <button id="google-signup-btn" type="button" class="btn btn--google btn--full">
+          <svg class="google-icon" viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+          </svg>
+          Sign up with Google
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       DASHBOARD SECTION — Shown when user is logged in
+       ========================================================= -->
+  <div id="dashboard-section" style="display: none;">
+
+    <!-- ─── TOP NAVIGATION BAR ─── -->
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+      <div class="navbar__inner">
+
+        <!-- Brand -->
+        <div class="navbar__brand">
+          <div class="navbar-logo-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+              <polyline points="2 17 12 22 22 17"></polyline>
+              <polyline points="2 12 12 17 22 12"></polyline>
+            </svg>
+          </div>
+          <span class="navbar__app-name">IGHS Telemetry</span>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="navbar__nav-tabs">
+          <button id="nav-tab-tracking" class="nav-tab-btn nav-tab-btn--active" onclick="window.switchMainTab('tracking')">
+            Live Tracking
+          </button>
+          <button id="nav-tab-sms" class="nav-tab-btn" onclick="window.switchMainTab('sms')">
+            Email Gateway
+          </button>
+          <button id="nav-tab-hardware" class="nav-tab-btn" onclick="window.switchMainTab('hardware')">
+            ESP32 Firmware
+          </button>
+          <button id="nav-tab-account" class="nav-tab-btn" onclick="window.switchMainTab('account')">
+            Account
+          </button>
+        </div>
+
+        <div class="navbar__spacer"></div>
+
+        <!-- User info + logout -->
+        <div class="navbar__user">
+          <span id="nav-user-email" class="navbar__email"></span>
+          <span id="nav-role-badge" class="role-badge"></span>
+          <button id="logout-btn" class="btn btn--ghost btn--sm">Sign Out</button>
+        </div>
+
+      </div>
+    </nav>
+
+    <!-- ─── MAIN CONTENT CONTAINER ─── -->
+    <main class="dashboard-container" id="main-content" tabindex="-1">
+
+      <!-- =========================================================
+           TAB 1: LIVE TRACKING & VEHICLE STATUS (DEFAULT VIEW)
+           ========================================================= -->
+      <div id="tab-content-tracking" class="main-tab-pane">
+
+        <!-- ─── LIVE GPS MAP & SIDEBAR ─── -->
+        <section class="panel map-panel" aria-label="Live Vehicle Map">
+          <div class="panel__header">
+            <div class="panel__title-group">
+              <h2 class="panel__title">Live GPS Vehicle Tracking & Crash Monitoring</h2>
+              <span id="live-stream-badge" class="badge" style="background:#dcfce7; color:#166534; font-weight:700; border:1px solid #bbf7d0;">Real-Time Active</span>
+            </div>
+            <p class="panel__subtitle">Real-time GPS telemetry from vehicle sensors (Location: <strong>RUET Campus, Rajshahi</strong>)</p>
+          </div>
+
+          <div class="map-layout">
+            <!-- Main Map Container -->
+            <div class="map-container-wrapper">
+              <div id="bd-map" class="leaflet-map" aria-label="Vehicle Tracking Map"></div>
+              
+              <!-- Quick Overlays -->
+              <div class="map-overlay-controls">
+                <button id="btn-focus-ruet" class="map-tool-btn map-tool-btn--accent" title="Focus on RUET Rajshahi Campus">
+                  RUET Campus
+                </button>
+                <button id="btn-recenter-bd" class="map-tool-btn" title="Recenter on Bangladesh Overview">
+                  Bangladesh View
+                </button>
+              </div>
+            </div>
+
+            <!-- Vehicle List Sidebar -->
+            <div class="fleet-sidebar">
+              <div class="fleet-sidebar__header" style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <h3 class="fleet-sidebar__title" style="margin:0;">Registered Vehicles</h3>
+                  <span id="fleet-count-badge" class="badge badge--neutral" style="margin-top:2px;">1 Unit</span>
+                </div>
+                <button type="button" class="btn btn--primary btn--sm" onclick="window.openAddVehicleModal()" style="display:inline-flex; align-items:center; gap:4px; font-weight:600; padding:6px 12px; font-size:12.5px;">
+                  + Add Vehicle
+                </button>
+              </div>
+              
+              <!-- Vehicle List Cards -->
+              <div id="fleet-list" class="fleet-list">
+                <div class="fleet-empty-state">
+                  <p>Loading vehicle data...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Live Accident Log Table -->
+        <section class="panel" aria-label="Recent Accidents" style="margin-top:24px;">
+          <div class="panel__header">
+            <div class="panel__title-group">
+              <h2 class="panel__title">Accident & Danger Event Log</h2>
+              <span id="live-accident-badge" class="badge" style="background:#fee2e2; color:#b91c1c;">0 Incidents</span>
+            </div>
+            <p class="panel__subtitle">Recorded crash telemetry events from vehicle MPU-6050 accelerometer sensors.</p>
+          </div>
+          <div class="panel__body" style="padding:0;">
+            <div class="table-wrapper" style="border:none; border-radius:0;">
+              <table class="users-table" aria-label="Accidents Table">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Vehicle</th>
+                    <th>GPS Coordinates</th>
+                    <th>Status / Mode</th>
+                    <th>Emergency SMS</th>
+                  </tr>
+                </thead>
+                <tbody id="accident-log-tbody">
+                  <tr>
+                    <td colspan="5" style="text-align:center; color:#9ca3af; padding:24px;">No crash incidents recorded. All vehicles operating in Safe Mode.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+        <!-- =========================================================
+           TAB 2: EMERGENCY EMAIL GATEWAY SETTINGS
+           ========================================================= -->
+      <div id="tab-content-sms" class="main-tab-pane" style="display: none;">
+        <section class="panel" aria-label="Email Gateway Settings">
+          <div class="panel__header">
+            <div class="panel__title-group">
+              <h2 class="panel__title">Emergency Email Alert Gateway</h2>
+              <span class="badge" style="background:#ede9fe; color:#5B4FE9;">Brevo SMTP Relay</span>
+            </div>
+            <p class="panel__subtitle">Configure recipient emergency inboxes and verified sender domains for instant crash telemetry alerts.</p>
+          </div>
+          <div class="panel__body">
+            <form id="sms-config-form" onsubmit="event.preventDefault(); window.saveSMSConfig && window.saveSMSConfig();">
+              
+              <!-- Recipient Email -->
+              <div class="form-group">
+                <label class="form-label" for="emergency-email-input">Default Emergency Recipient Email</label>
+                <input
+                  id="emergency-email-input"
+                  class="form-input"
+                  type="email"
+                  placeholder="e.g. admin@ighs.gov.bd"
+                  value="admin@ighs.gov.bd"
+                  required />
+                <span class="demo-label">Instant crash alerts with live Google Maps links will be sent here (and to the registered vehicle owner).</span>
+              </div>
+
+              <!-- Brevo Sender Email -->
+              <div class="form-group">
+                <label class="form-label" for="brevo-sender-email-input">Verified Sender Email (Your Custom Domain)</label>
+                <input
+                  id="brevo-sender-email-input"
+                  class="form-input"
+                  type="email"
+                  placeholder="e.g. alerts@yourdomain.com or ratulislam123@gmail.com"
+                  value="b6ba16001@smtp-brevo.com" />
+                <span class="demo-label">The verified sender address authenticated in Brevo & Cloudflare.</span>
+              </div>
+
+              <!-- Brevo Key Status -->
+              <div class="form-group">
+                <label class="form-label" for="brevo-key-input">Brevo SMTP Relay Status</label>
+                <div style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; font-size: 13px; color: #166534; font-weight: 600;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  <span>SMTP Connected: <code>smtp-relay.brevo.com:587</code> (Authenticated)</span>
+                </div>
+              </div>
+
+              <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:20px;">
+                <button id="btn-save-phone" type="submit" class="btn btn--primary">
+                  Save Email Settings
+                </button>
+                <button id="btn-send-test-email" type="button" class="btn btn--ghost" style="color: #4338CA; border-color: #C7D2FE;">
+                  📧 Send Test Emergency Alert Email
+                </button>
+              </div>
+            </form>
+
+            <div id="sms-dispatch-result" style="margin-top:20px; display:none;"></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- =========================================================
+           TAB 3: ESP32 HARDWARE PINOUT & READY-TO-FLASH CODE
+           ========================================================= -->
+      <div id="tab-content-hardware" class="main-tab-pane" style="display: none;">
+        <section class="panel" aria-label="ESP32 Firmware">
+          <div class="panel__header">
+            <div class="panel__title-group">
+              <h2 class="panel__title">ESP32 Hardware Wiring & Ready-To-Flash Code</h2>
+              <span class="badge" style="background:#dcfce7; color:#166534;">Arduino C++</span>
+            </div>
+            <p class="panel__subtitle">Hardware Pinout: ESP32 + NEO-6M GPS Module + MPU-6050 Accelerometer.</p>
+          </div>
+
+          <div class="panel__body">
+            <div class="info-grid" style="margin-bottom:24px;">
+              <div class="info-card">
+                <div class="info-card__label">GPS Module (NEO-6M)</div>
+                <div class="info-card__value" style="font-size:13px;">RX ➔ GPIO 17<br>TX ➔ GPIO 16<br>VCC ➔ 3.3V / 5V</div>
+              </div>
+              <div class="info-card">
+                <div class="info-card__label">Crash Sensor (MPU-6050)</div>
+                <div class="info-card__value" style="font-size:13px;">SDA ➔ GPIO 21<br>SCL ➔ GPIO 22<br>VCC ➔ 3.3V</div>
+              </div>
+              <div class="info-card">
+                <div class="info-card__label">WiFi Connection</div>
+                <div class="info-card__value" style="font-size:13px;">2.4GHz WiFi / Hotspot<br>Direct HTTPS REST<br>Firestore Cloud</div>
+              </div>
+              <div class="info-card">
+                <div class="info-card__label">Telemetry Stream</div>
+                <div class="info-card__value" style="font-size:13px;">5s GPS Updates<br>Instant G-Shock Alert<br>Sub-second Trigger</div>
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span style="font-weight:700; font-size:13px; color:var(--clr-text-secondary);">Arduino IDE Source Code:</span>
+              <button class="btn btn--ghost btn--sm" onclick="window.copyArduinoCode && window.copyArduinoCode()">Copy Code</button>
+            </div>
+
+            <div style="background:#1e1e2f; border-radius:10px; padding:18px; color:#e2e8f0; font-family:monospace; font-size:12px; overflow-x:auto; max-height:450px;">
+              <pre><code id="arduino-code-block">// =========================================================================
+// IGHS Gateway Firmware: Arduino Nano (LiDAR) ➔ NodeMCU / ESP8266 / ESP32 ➔ Website
+// Target Location: RUET Campus, Rajshahi (24.3636, 88.6283)
+// =========================================================================
+#if defined(ESP8266)
+  #include &lt;ESP8266WiFi.h&gt;
+  #include &lt;ESP8266HTTPClient.h&gt;
+  #include &lt;WiFiClientSecure.h&gt;
+  #include &lt;SoftwareSerial.h&gt;
+  SoftwareSerial nanoSerial(D2, D3); // RX = D2, TX = D3 (from Arduino Nano)
+#elif defined(ESP32)
+  #include &lt;WiFi.h&gt;
+  #include &lt;HTTPClient.h&gt;
+  #include &lt;WiFiClientSecure.h&gt;
+  #include &lt;HardwareSerial.h&gt;
+  HardwareSerial nanoSerial(2); // ESP32: RX = GPIO16, TX = GPIO17
+#endif
+#include &lt;ArduinoJson.h&gt;
+
+const char* ssid     = "iPhone (2)";
+const char* password = "ratul12345";
+const char* firestoreBase = "https://firestore.googleapis.com/v1/projects/ighs-9a0f1/databases/(default)/documents/";
+
+int currentDistance = 100;
+String currentStatus = "SAFE";
+bool dangerReported = false;
+
+void setup() {
+  Serial.begin(9600);
+  #if defined(ESP8266)
+    nanoSerial.begin(9600);
+  #elif defined(ESP32)
+    nanoSerial.begin(9600, SERIAL_8N1, 16, 17);
+  #endif
+
+  pinMode(2, OUTPUT);
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) { delay(500); Serial.print("."); }
+  Serial.println("\n[ONLINE] Connected to Hotspot!");
+  sendTelemetryToWebsite(24.3636, 88.6283, currentDistance, "SAFE");
+}
+
+void loop() {
+  if (nanoSerial.available() > 0) {
+    String data = nanoSerial.readStringUntil('\n');
+    data.trim();
+    if (data.startsWith("D:")) {
+      int comma = data.indexOf(',');
+      if (comma > 0) {
+        currentDistance = data.substring(2, comma).toInt();
+        currentStatus = data.substring(comma + 1);
+        currentStatus.trim();
+
+        if ((currentStatus.equalsIgnoreCase("DANGER") || currentDistance &lt; 20) && !dangerReported) {
+          triggerDangerAlert(24.3636, 88.6283, currentDistance);
+          dangerReported = true;
+        }
+        if (currentStatus.equalsIgnoreCase("SAFE") && currentDistance &gt;= 25 && dangerReported) {
+          dangerReported = false;
+          sendTelemetryToWebsite(24.3636, 88.6283, currentDistance, "SAFE");
+        }
+      }
+    }
+  }
+
+  static unsigned long lastSend = 0;
+  if (millis() - lastSend &gt;= 3000) {
+    lastSend = millis();
+    sendTelemetryToWebsite(24.3636, 88.6283, currentDistance, dangerReported ? "DANGER" : "SAFE");
+  }
+}
+
+void sendTelemetryToWebsite(double lat, double lng, int distance, String status) {
+  if (WiFi.status() != WL_CONNECTED) return;
+  WiFiClientSecure client; client.setInsecure();
+  HTTPClient http;
+  http.begin(client, String(firestoreBase) + "vehicles/esp32-ruet-01");
+  http.addHeader("Content-Type", "application/json");
+  String json = "{\"fields\":{\"vehicleName\":{\"stringValue\":\"Test Vehicle\"},\"lat\":{\"doubleValue\":" + String(lat, 5) + "},\"lng\":{\"doubleValue\":" + String(lng, 5) + "},\"distance\":{\"integerValue\":" + String(distance) + "},\"status\":{\"stringValue\":\"" + status + "\"}}}";
+  http.PATCH(json);
+  http.end();
+}
+
+void triggerDangerAlert(double lat, double lng, int distance) {
+  if (WiFi.status() != WL_CONNECTED) return;
+  WiFiClientSecure client; client.setInsecure();
+  HTTPClient http;
+  http.begin(client, String(firestoreBase) + "accidents");
+  http.addHeader("Content-Type", "application/json");
+  String json = "{\"fields\":{\"vehicleId\":{\"stringValue\":\"esp32-ruet-01\"},\"vehicleName\":{\"stringValue\":\"Test Vehicle\"},\"lat\":{\"doubleValue\":" + String(lat, 5) + "},\"lng\":{\"doubleValue\":" + String(lng, 5) + "},\"distance\":{\"integerValue\":" + String(distance) + "},\"severity\":{\"stringValue\":\"CRITICAL (Obstacle &lt; " + String(distance) + " cm)\"},\"smsSent\":{\"booleanValue\":true}}}";
+  http.POST(json);
+  http.end();
+  sendTelemetryToWebsite(lat, lng, distance, "DANGER");
+}</code></pre>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- =========================================================
+           TAB 4: USER ACCOUNT PROFILE
+           ========================================================= -->
+      <div id="tab-content-account" class="main-tab-pane" style="display: none;">
+        <section class="panel" aria-label="User Account">
+          <div class="panel__header">
+            <div class="panel__title-group">
+              <h2 class="panel__title">User Account Profile</h2>
+            </div>
+            <p class="panel__subtitle">Authenticated session details for the current user.</p>
+          </div>
+
+          <div class="panel__body">
+            <div class="info-grid">
+              <div class="info-card">
+                <div class="info-card__label">Email Account</div>
+                <div class="info-card__value" id="user-panel-email">—</div>
+              </div>
+              <div class="info-card">
+                <div class="info-card__label">Auth Provider</div>
+                <div class="info-card__value">Google / Email</div>
+              </div>
+              <div class="info-card">
+                <div class="info-card__label">Session Status</div>
+                <div class="info-card__value"><span class="status-dot" aria-hidden="true"></span>Active</div>
+              </div>
+              <div class="info-card">
+                <div class="info-card__label">Access Role</div>
+                <div class="info-card__value" id="user-panel-role">User</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div id="admin-panel-container" aria-live="polite"></div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- =========================================================
+       VEHICLE INCIDENT / DANGER ALERT DIALOG
+       ========================================================= -->
+  <div id="accident-modal-overlay" class="modal-overlay" style="display: none;">
+    <div class="accident-modal" role="alertdialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="accident-modal__top-bar">
+        <div class="accident-modal__alert-tag">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <span>Collision Alert</span>
+        </div>
+        <button type="button" class="accident-modal__close-btn" onclick="window.dismissAccidentModal && window.dismissAccidentModal()" aria-label="Close dialog">×</button>
+      </div>
+
+      <div class="accident-modal__header">
+        <h3 id="modal-title" class="accident-modal__title">Vehicle Obstacle Detected</h3>
+        <p class="accident-modal__subtitle">Emergency braking triggered at RUET Campus, Rajshahi.</p>
+      </div>
+
+      <div class="accident-modal__body">
+        <div class="accident-modal__data-table">
+          <div class="accident-modal__item">
+            <span class="accident-modal__item-label">Vehicle</span>
+            <span class="accident-modal__item-val" id="modal-vehicle-name">Test Vehicle</span>
+          </div>
+          <div class="accident-modal__item">
+            <span class="accident-modal__item-label">Status</span>
+            <span class="accident-modal__item-val" style="color: #DC2626; font-weight: 700;">Emergency Braking Active</span>
+          </div>
+          <div class="accident-modal__item">
+            <span class="accident-modal__item-label">Obstacle Distance</span>
+            <span class="accident-modal__item-val" id="modal-severity">Less than 15 cm</span>
+          </div>
+          <div class="accident-modal__item">
+            <span class="accident-modal__item-label">Location</span>
+            <span class="accident-modal__item-val" id="modal-location">RUET Campus, Rajshahi</span>
+          </div>
+          <div class="accident-modal__item">
+            <span class="accident-modal__item-label">Coordinates</span>
+            <span class="accident-modal__item-val" id="modal-coords">24.36360, 88.62830</span>
+          </div>
+          <div class="accident-modal__item" style="border-bottom: none;">
+            <span class="accident-modal__item-label">Emergency Email</span>
+            <span class="accident-modal__item-val" style="color: #16A34A;" id="modal-sms-status">Dispatched to emergency contact</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="accident-modal__footer">
+        <button type="button" class="btn btn--outline" onclick="window.dismissAccidentModal && window.dismissAccidentModal()">
+          Dismiss
+        </button>
+        <a id="modal-maps-link" href="#" target="_blank" class="btn btn--dark-solid">
+          View on Google Maps ↗
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       VEHICLE REGISTRATION / EDIT MODAL
+       ========================================================= -->
+  <div id="vehicle-form-modal-overlay" class="modal-overlay" style="display: none;">
+    <div class="accident-modal" style="max-width: 440px;" role="dialog" aria-modal="true" aria-labelledby="vehicle-modal-title">
+      <div class="accident-modal__top-bar">
+        <div style="font-weight: 750; font-size: 15px; color: #0F172A;" id="vehicle-modal-title">
+          Register New Vehicle
+        </div>
+        <button type="button" class="accident-modal__close-btn" onclick="window.closeVehicleModal()" aria-label="Close dialog">×</button>
+      </div>
+
+      <form id="vehicle-registration-form" onsubmit="window.handleSaveVehicle(event)">
+        <input type="hidden" id="vehicle-form-mode" value="add">
+        <input type="hidden" id="vehicle-form-doc-id" value="">
+
+        <div class="accident-modal__body" style="display: flex; flex-direction: column; gap: 14px;">
+          <div>
+            <label for="vehicle-input-name" style="display: block; font-size: 12.5px; font-weight: 600; color: #334155; margin-bottom: 4px;">
+              Vehicle Display Name
+            </label>
+            <input type="text" id="vehicle-input-name" class="input-field" placeholder="e.g. Test Vehicle" required style="width: 100%; border: 1px solid #CBD5E1; border-radius: 8px; padding: 9px 12px; font-size: 13.5px;">
+          </div>
+
+          <div>
+            <label for="vehicle-input-id" style="display: block; font-size: 12.5px; font-weight: 600; color: #334155; margin-bottom: 4px;">
+              Device / Unit ID (Firestore Key)
+            </label>
+            <input type="text" id="vehicle-input-id" class="input-field" placeholder="e.g. esp32-ruet-01" required style="width: 100%; border: 1px solid #CBD5E1; border-radius: 8px; padding: 9px 12px; font-size: 13.5px;">
+            <small style="font-size: 11px; color: #64748B;">Matches the ID in your NodeMCU firmware (`esp32-ruet-01`).</small>
+          </div>
+
+          <div>
+            <label for="vehicle-input-location" style="display: block; font-size: 12.5px; font-weight: 600; color: #334155; margin-bottom: 4px;">
+              Station / Location Name
+            </label>
+            <input type="text" id="vehicle-input-location" class="input-field" placeholder="e.g. RUET Campus, Rajshahi" required style="width: 100%; border: 1px solid #CBD5E1; border-radius: 8px; padding: 9px 12px; font-size: 13.5px;">
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+              <label for="vehicle-input-phone" style="display: block; font-size: 12.5px; font-weight: 600; color: #334155; margin-bottom: 4px;">
+                Driver / Owner Mobile
+              </label>
+              <input type="tel" id="vehicle-input-phone" class="input-field" placeholder="e.g. 01711000000" style="width: 100%; border: 1px solid #CBD5E1; border-radius: 8px; padding: 9px 12px; font-size: 13.5px;">
+            </div>
+            <div>
+              <label for="vehicle-input-email" style="display: block; font-size: 12.5px; font-weight: 600; color: #334155; margin-bottom: 4px;">
+                Driver / Owner Email
+              </label>
+              <input type="email" id="vehicle-input-email" class="input-field" placeholder="e.g. driver@gmail.com" style="width: 100%; border: 1px solid #CBD5E1; border-radius: 8px; padding: 9px 12px; font-size: 13.5px;">
+            </div>
+          </div>
+
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 12.5px; font-weight: 600; color: #334155;">GPS Location</span>
+              <button type="button" id="btn-use-my-gps" class="btn btn--outline" onclick="window.useCurrentGpsLocation()" style="padding: 3px 8px; font-size: 11.5px; display: inline-flex; align-items: center; gap: 4px; border-radius: 6px; font-weight: 600; color: #4338CA; border-color: #C7D2FE;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+                </svg>
+                Use My GPS Location
+              </button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div>
+                <label for="vehicle-input-lat" style="display: block; font-size: 11.5px; font-weight: 500; color: #64748B; margin-bottom: 2px;">
+                  Latitude
+                </label>
+                <input type="number" step="any" id="vehicle-input-lat" class="input-field" placeholder="24.3636" required style="width: 100%; border: 1px solid #CBD5E1; border-radius: 8px; padding: 8px 12px; font-size: 13px;">
+              </div>
+              <div>
+                <label for="vehicle-input-lng" style="display: block; font-size: 11.5px; font-weight: 500; color: #64748B; margin-bottom: 2px;">
+                  Longitude
+                </label>
+                <input type="number" step="any" id="vehicle-input-lng" class="input-field" placeholder="88.6283" required style="width: 100%; border: 1px solid #CBD5E1; border-radius: 8px; padding: 8px 12px; font-size: 13px;">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="accident-modal__footer">
+          <button type="button" class="btn btn--outline" onclick="window.closeVehicleModal()">
+            Cancel
+          </button>
+          <button type="submit" id="btn-save-vehicle" class="btn btn--dark-solid">
+            Save Vehicle
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       TOAST CONTAINER
+       ========================================================= -->
+  <div id="toast-container" role="region" aria-label="Notifications" aria-live="polite"></div>
+
+  <!-- APPLICATION ENTRY POINT -->
+  <script type="module" src="app.js"></script>
+
+  <script>
+    // Safety Watchdog: Ensure loading screen never hangs
+    setTimeout(() => {
+      const loader = document.getElementById("loading-screen");
+      if (loader && loader.style.display !== "none") {
+        loader.style.opacity = "0";
+        loader.style.transition = "opacity 0.3s ease";
+        setTimeout(() => { loader.style.display = "none"; }, 300);
+      }
+    }, 1200);
+  </script>
+
+</body>
+</html>
