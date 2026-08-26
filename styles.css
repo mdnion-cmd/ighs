@@ -2014,3 +2014,31 @@ h1, h2, h3, h4, h5, h6 {
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }
+
+/* User Profile Dropdown Menu */
+.dropdown-item-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dropdown-item-btn:hover {
+  background: #F1F5F9;
+  color: #0F172A;
+}
+
+.profile-avatar-btn:hover {
+  background: #E2E8F0 !important;
+  border-color: #CBD5E1 !important;
+}
