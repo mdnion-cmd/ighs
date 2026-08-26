@@ -508,7 +508,7 @@ window.handleSaveVehicle = async (e) => {
 
       // Auto dispatch registration email if driverEmail was provided
       if (driverEmail) {
-        sendRegistrationEmail(driverEmail, {
+        await sendRegistrationEmail(driverEmail, {
           vehicleName,
           targetId,
           locationName,
@@ -527,6 +527,15 @@ window.handleSaveVehicle = async (e) => {
         lastUpdate: serverTimestamp()
       }, { merge: true });
       showToast(`Vehicle '${vehicleName}' updated!`, "success");
+
+      if (driverEmail) {
+        await sendRegistrationEmail(driverEmail, {
+          vehicleName,
+          targetId,
+          locationName,
+          lat, lng
+        });
+      }
     }
 
     window.closeVehicleModal();
@@ -849,7 +858,9 @@ async function sendRegistrationEmail(driverEmail, vehicleData) {
   `;
 
   try {
-    const key = brevoApiKey || DEFAULT_KEY;
+    const key = (document.getElementById("brevo-key-input")?.value?.trim()) || brevoApiKey || DEFAULT_KEY;
+    const sender = (document.getElementById("brevo-sender-email-input")?.value?.trim()) || brevoSenderEmail || "b6ba16001@smtp-brevo.com";
+
     const res = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
       headers: {
@@ -858,16 +869,21 @@ async function sendRegistrationEmail(driverEmail, vehicleData) {
         "api-key": key
       },
       body: JSON.stringify({
-        sender: { name: "IGHS Telemetry Network", email: brevoSenderEmail || "b6ba16001@smtp-brevo.com" },
+        sender: { name: "IGHS Telemetry Network", email: sender },
         to: [{ email: driverEmail, name: "Vehicle Owner" }],
         subject: `IGHS Telemetry: Unit ${targetId} (${vehicleName}) is active`,
         htmlContent: htmlContent
       })
     });
 
-    const data = await res.json();
+    const bText = await res.text();
+    let data = {};
+    try { data = JSON.parse(bText); } catch (e) {}
+
     if (res.ok || (data && data.messageId)) {
       showToast(`Registration confirmation sent to ${driverEmail}`, "success");
+    } else {
+      console.warn("Registration dispatch note:", data?.message || bText);
     }
   } catch (e) {
     console.warn("Registration email notice:", e.message);
