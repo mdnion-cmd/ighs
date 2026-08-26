@@ -508,22 +508,12 @@ window.handleSaveVehicle = async (e) => {
 
       // Auto dispatch registration email if driverEmail was provided
       if (driverEmail) {
-        try {
-          fetch(`${location.origin}/register-email`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              to: driverEmail,
-              senderEmail: brevoSenderEmail,
-              vehicleName,
-              vehicleId: targetId,
-              locationName,
-              lat, lng,
-              apiKey: brevoApiKey
-            })
-          });
-          showToast(`Welcome email sent to ${driverEmail}`, "info");
-        } catch (mailErr) {}
+        sendRegistrationEmail(driverEmail, {
+          vehicleName,
+          targetId,
+          locationName,
+          lat, lng
+        });
       }
 
     } else {
@@ -800,56 +790,106 @@ async function sendAccidentSMS(accidentId, accidentData) {
   sendAccidentEmail(accidentId, accidentData);
 }
 
+async function sendRegistrationEmail(driverEmail, vehicleData) {
+  if (!driverEmail) return;
+  const { vehicleName, targetId, locationName, lat, lng } = vehicleData;
+  const mapUrl = (lat && lng) ? `https://maps.google.com/?q=${lat},${lng}` : "https://maps.google.com/?q=24.3636,88.6283";
+
+  const htmlContent = `
+    <div style="font-family:sans-serif; max-width:540px; margin:0 auto; padding:24px; background:#fff; border:1px solid #e2e8f0; border-radius:12px;">
+      <div style="text-align:center; margin-bottom:16px;">
+        <span style="display:inline-block; padding:6px 14px; background:#dcfce7; color:#166534; font-weight:700; font-size:12px; border-radius:20px; text-transform:uppercase;">Vehicle Registered</span>
+      </div>
+      <h2 style="color:#0f172a; margin:0 0 10px 0; text-align:center;">🚗 ${vehicleName} is Active on IGHS</h2>
+      <p style="color:#475569; text-align:center; font-size:14px;">Your vehicle has been successfully linked to the <strong>IGHS Intelligent Highway Telemetry Gateway</strong>.</p>
+      
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:16px; margin:20px 0; font-size:13.5px;">
+        <p style="margin:6px 0;"><strong>🚗 Vehicle Name:</strong> ${vehicleName}</p>
+        <p style="margin:6px 0;"><strong>🆔 Hardware Unit ID:</strong> <code>${targetId}</code></p>
+        <p style="margin:6px 0;"><strong>📍 Station / Location:</strong> ${locationName || 'RUET Campus, Rajshahi'}</p>
+        <p style="margin:6px 0;"><strong>🛡️ Crash Protection:</strong> Active & Monitored</p>
+      </div>
+
+      <div style="text-align:center; margin-top:24px;">
+        <a href="${mapUrl}" target="_blank" style="display:inline-block; background:#4338ca; color:#ffffff; text-decoration:none; padding:12px 24px; font-size:14px; font-weight:600; border-radius:8px;">
+          📍 View Vehicle on Live Map ↗
+        </a>
+      </div>
+      
+      <p style="font-size:11.5px; color:#94a3b8; text-align:center; margin-top:24px; border-top:1px solid #f1f5f9; padding-top:12px;">
+        You will receive instant emergency alerts at this email if a crash or obstacle is detected.
+      </p>
+    </div>
+  `;
+
+  try {
+    const key = brevoApiKey || DEFAULT_KEY;
+    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "api-key": key
+      },
+      body: JSON.stringify({
+        sender: { name: "IGHS Vehicle Registry", email: brevoSenderEmail || "b6ba16001@smtp-brevo.com" },
+        to: [{ email: driverEmail, name: "Vehicle Owner" }],
+        subject: `🚗 [Vehicle Registered] ${vehicleName} is now active on IGHS Telemetry`,
+        htmlContent: htmlContent
+      })
+    });
+
+    const data = await res.json();
+    if (res.ok || (data && data.messageId)) {
+      showToast(`Registration email dispatched to ${driverEmail}`, "success");
+    }
+  } catch (e) {
+    console.warn("Registration email notice:", e.message);
+  }
+}
+
 async function sendAccidentEmail(accidentId, accidentData) {
   const { lat, lng, severity, distance, locationName, driverEmail } = accidentData;
-  const targetRecipient = driverEmail || emergencyContactEmail;
+  
+  // Send crash alert to BOTH Admin and Vehicle Owner
+  const recipients = [];
+  if (emergencyContactEmail) {
+    recipients.push({ email: emergencyContactEmail, name: "Admin Emergency" });
+  }
+  if (driverEmail && driverEmail !== emergencyContactEmail) {
+    recipients.push({ email: driverEmail, name: "Vehicle Owner" });
+  }
+  if (recipients.length === 0) return;
 
   const mapUrl = (lat && lng) ? `https://maps.google.com/?q=${lat},${lng}` : "https://maps.google.com/?q=24.3636,88.6283";
   const vehicleName = accidentData.vehicleName || "Test Vehicle";
 
-  const emailBody = {
-    to: targetRecipient,
-    senderEmail: brevoSenderEmail,
-    vehicleName: vehicleName,
-    lat: lat || RUET_COORDS.lat,
-    lng: lng || RUET_COORDS.lng,
-    distance: distance || 10,
-    severity: severity || "Obstacle < 15 cm",
-    apiKey: brevoApiKey
-  };
-
-  try {
-    // 1. Try local/backend server endpoint
-    const res = await fetch(`${location.origin}/email`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(emailBody)
-    });
-
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success) {
-        showToast(`Emergency Alert Email dispatched to ${targetRecipient}`, "success");
-        return;
-      }
-    }
-  } catch (e) {}
-
-  // 2. Direct Cloudflare Pages Fallback via Brevo REST API
-  try {
-    const htmlContent = `
-      <div style="font-family:sans-serif; max-width:540px; margin:0 auto; padding:20px; background:#fff; border:1px solid #e2e8f0; border-radius:10px;">
-        <h2 style="color:#dc2626; margin:0 0 10px 0;">🚨 [CRITICAL ALERT] Vehicle Collision Detected</h2>
-        <p><strong>Vehicle:</strong> ${vehicleName}</p>
-        <p><strong>Location:</strong> ${locationName || 'RUET Campus, Rajshahi'}</p>
-        <p><strong>Obstacle Distance:</strong> ${distance || 10} cm</p>
-        <p><strong>Status:</strong> Emergency Braking Active</p>
-        <p><a href="${mapUrl}" style="display:inline-block; padding:10px 18px; background:#0f172a; color:#fff; text-decoration:none; border-radius:6px;">View on Google Maps ↗</a></p>
+  const htmlContent = `
+    <div style="font-family:sans-serif; max-width:540px; margin:0 auto; padding:24px; background:#fff; border:1px solid #fee2e2; border-radius:12px;">
+      <div style="text-align:center; margin-bottom:16px;">
+        <span style="display:inline-block; padding:6px 14px; background:#fee2e2; color:#991b1b; font-weight:700; font-size:12px; border-radius:20px; text-transform:uppercase;">Emergency Alert</span>
       </div>
-    `;
+      <h2 style="color:#dc2626; margin:0 0 10px 0; text-align:center;">🚨 [CRITICAL ALERT] Vehicle Collision Detected</h2>
+      <p style="color:#475569; text-align:center; font-size:14px;">An emergency crash / obstacle event was detected by the LiDAR sensor.</p>
+      
+      <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:16px; margin:20px 0; font-size:13.5px;">
+        <p style="margin:6px 0;"><strong>🚗 Vehicle:</strong> ${vehicleName}</p>
+        <p style="margin:6px 0;"><strong>📍 Location:</strong> ${locationName || 'RUET Campus, Rajshahi'}</p>
+        <p style="margin:6px 0;"><strong>📏 Obstacle Distance:</strong> <span style="color:#dc2626; font-weight:700;">${distance || 10} cm</span></p>
+        <p style="margin:6px 0;"><strong>🛡️ System Action:</strong> Automatic Emergency Braking Engaged</p>
+      </div>
 
+      <div style="text-align:center; margin-top:24px;">
+        <a href="${mapUrl}" target="_blank" style="display:inline-block; background:#0f172a; color:#ffffff; text-decoration:none; padding:12px 24px; font-size:14px; font-weight:600; border-radius:8px;">
+          📍 View Live Location in Google Maps ↗
+        </a>
+      </div>
+    </div>
+  `;
+
+  try {
     const directKey = brevoApiKey || DEFAULT_KEY;
-    await fetch("https://api.brevo.com/v3/smtp/email", {
+    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
       headers: {
         "accept": "application/json",
@@ -857,13 +897,18 @@ async function sendAccidentEmail(accidentId, accidentData) {
         "api-key": directKey
       },
       body: JSON.stringify({
-        sender: { name: "IGHS Emergency System", email: brevoSenderEmail || "ratulislam123@gmail.com" },
-        to: [{ email: targetRecipient }],
-        subject: `🚨 [CRITICAL ALERT] Vehicle Collision Detected (${vehicleName})`,
+        sender: { name: "IGHS Emergency System", email: brevoSenderEmail || "b6ba16001@smtp-brevo.com" },
+        to: recipients,
+        subject: `🚨 [CRITICAL ALERT] Vehicle Crash Detected (${vehicleName})`,
         htmlContent: htmlContent
       })
     });
-    showToast(`Emergency Email sent to ${targetRecipient}`, "success");
+
+    const data = await res.json();
+    if (res.ok || (data && data.messageId)) {
+      const recipientNames = recipients.map(r => r.email).join(", ");
+      showToast(`Emergency alert dispatched to ${recipientNames}`, "success");
+    }
   } catch (directErr) {
     console.warn("Direct Brevo API Notice:", directErr.message);
   }
