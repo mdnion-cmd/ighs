@@ -16,7 +16,11 @@ SoftwareSerial nanoSerial(D2, D3); // RX = D2, TX = D3
 const char* ssid     = "iPhone (2)";
 const char* password = "ratul12345";
 
-// ── 2. Firebase Cloud Database Endpoint ──────────────────────────────────────
+// ── 2. Vehicle Identity (Matches "Device / Unit ID" on Website) ───────────────
+const char* vehicleId   = "esp32-ruet-01"; // Change to "esp32-ruet-02", etc. for other cars
+const char* vehicleName = "RUET Test Vehicle";
+
+// ── 3. Firebase Cloud Database Endpoint ──────────────────────────────────────
 const char* firestoreBase = "https://firestore.googleapis.com/v1/projects/ighs-9a0f1/databases/(default)/documents/";
 
 // Telemetry & Safety State
@@ -131,7 +135,7 @@ void sendTelemetryToWebsite(double lat, double lng, int distance, String status)
   client.setTimeout(1000);
 
   HTTPClient http;
-  String url = String(firestoreBase) + "vehicles/esp32-ruet-01";
+  String url = String(firestoreBase) + "vehicles/" + String(vehicleId);
   http.begin(client, url);
   http.addHeader("Content-Type", "application/json");
 
