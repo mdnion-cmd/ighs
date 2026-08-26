@@ -794,31 +794,57 @@ async function sendRegistrationEmail(driverEmail, vehicleData) {
   if (!driverEmail) return;
   const { vehicleName, targetId, locationName, lat, lng } = vehicleData;
   const mapUrl = (lat && lng) ? `https://maps.google.com/?q=${lat},${lng}` : "https://maps.google.com/?q=24.3636,88.6283";
+  const timestamp = new Date().toUTCString();
 
   const htmlContent = `
-    <div style="font-family:sans-serif; max-width:540px; margin:0 auto; padding:24px; background:#fff; border:1px solid #e2e8f0; border-radius:12px;">
-      <div style="text-align:center; margin-bottom:16px;">
-        <span style="display:inline-block; padding:6px 14px; background:#dcfce7; color:#166534; font-weight:700; font-size:12px; border-radius:20px; text-transform:uppercase;">Vehicle Registered</span>
-      </div>
-      <h2 style="color:#0f172a; margin:0 0 10px 0; text-align:center;">🚗 ${vehicleName} is Active on IGHS</h2>
-      <p style="color:#475569; text-align:center; font-size:14px;">Your vehicle has been successfully linked to the <strong>IGHS Intelligent Highway Telemetry Gateway</strong>.</p>
-      
-      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:16px; margin:20px 0; font-size:13.5px;">
-        <p style="margin:6px 0;"><strong>🚗 Vehicle Name:</strong> ${vehicleName}</p>
-        <p style="margin:6px 0;"><strong>🆔 Hardware Unit ID:</strong> <code>${targetId}</code></p>
-        <p style="margin:6px 0;"><strong>📍 Station / Location:</strong> ${locationName || 'RUET Campus, Rajshahi'}</p>
-        <p style="margin:6px 0;"><strong>🛡️ Crash Protection:</strong> Active & Monitored</p>
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 580px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; color: #1e293b;">
+      <div style="background-color: #0f172a; padding: 20px 24px; border-bottom: 2px solid #3b82f6;">
+        <h1 style="color: #ffffff; font-size: 17px; font-weight: 600; margin: 0; letter-spacing: -0.2px;">IGHS Highway Safety & Telemetry Network</h1>
+        <p style="color: #94a3b8; font-size: 12.5px; margin: 4px 0 0 0;">Unit Registration Confirmation Notice</p>
       </div>
 
-      <div style="text-align:center; margin-top:24px;">
-        <a href="${mapUrl}" target="_blank" style="display:inline-block; background:#4338ca; color:#ffffff; text-decoration:none; padding:12px 24px; font-size:14px; font-weight:600; border-radius:8px;">
-          📍 View Vehicle on Live Map ↗
-        </a>
+      <div style="padding: 24px;">
+        <p style="font-size: 14px; line-height: 1.5; color: #334155; margin: 0 0 16px 0;">
+          This notification confirms that vehicle unit <strong>${vehicleName}</strong> has been successfully registered and linked to the active telemetry gateway.
+        </p>
+
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin: 18px 0; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;">
+          <tr style="border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 10px 14px; color: #64748b; font-weight: 600; width: 40%;">Vehicle Name</td>
+            <td style="padding: 10px 14px; color: #0f172a; font-weight: 600;">${vehicleName}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 10px 14px; color: #64748b; font-weight: 600;">Hardware Unit ID</td>
+            <td style="padding: 10px 14px; color: #0f172a; font-family: monospace;">${targetId}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 10px 14px; color: #64748b; font-weight: 600;">Assigned Station</td>
+            <td style="padding: 10px 14px; color: #0f172a;">${locationName || 'RUET Campus, Rajshahi'}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 10px 14px; color: #64748b; font-weight: 600;">Coordinates</td>
+            <td style="padding: 10px 14px; color: #0f172a; font-family: monospace;">${lat ? lat.toFixed(5) : '24.36360'} N, ${lng ? lng.toFixed(5) : '88.62830'} E</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 14px; color: #64748b; font-weight: 600;">Timestamp</td>
+            <td style="padding: 10px 14px; color: #0f172a;">${timestamp}</td>
+          </tr>
+        </table>
+
+        <div style="margin: 24px 0 16px 0; text-align: center;">
+          <a href="${mapUrl}" target="_blank" style="display: inline-block; background-color: #2563eb; color: #ffffff; text-decoration: none; font-size: 13.5px; font-weight: 600; padding: 11px 24px; border-radius: 6px;">
+            Open Live Telemetry Map &rarr;
+          </a>
+        </div>
+
+        <p style="font-size: 12px; line-height: 1.5; color: #64748b; margin: 20px 0 0 0; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+          Telemetry streams and collision avoidance events for this vehicle will be monitored in real time. If you have questions regarding this registration, please contact your network administrator.
+        </p>
       </div>
-      
-      <p style="font-size:11.5px; color:#94a3b8; text-align:center; margin-top:24px; border-top:1px solid #f1f5f9; padding-top:12px;">
-        You will receive instant emergency alerts at this email if a crash or obstacle is detected.
-      </p>
+
+      <div style="background-color: #f1f5f9; padding: 14px 24px; font-size: 11.5px; color: #64748b; border-top: 1px solid #e2e8f0; text-align: center;">
+        Intelligent Gateway & Highway Safety System &bull; Department of EEE, RUET, Rajshahi 6204
+      </div>
     </div>
   `;
 
@@ -832,16 +858,16 @@ async function sendRegistrationEmail(driverEmail, vehicleData) {
         "api-key": key
       },
       body: JSON.stringify({
-        sender: { name: "IGHS Vehicle Registry", email: brevoSenderEmail || "b6ba16001@smtp-brevo.com" },
+        sender: { name: "IGHS Telemetry Network", email: brevoSenderEmail || "b6ba16001@smtp-brevo.com" },
         to: [{ email: driverEmail, name: "Vehicle Owner" }],
-        subject: `🚗 [Vehicle Registered] ${vehicleName} is now active on IGHS Telemetry`,
+        subject: `IGHS Telemetry: Unit ${targetId} (${vehicleName}) is active`,
         htmlContent: htmlContent
       })
     });
 
     const data = await res.json();
     if (res.ok || (data && data.messageId)) {
-      showToast(`Registration email dispatched to ${driverEmail}`, "success");
+      showToast(`Registration confirmation sent to ${driverEmail}`, "success");
     }
   } catch (e) {
     console.warn("Registration email notice:", e.message);
@@ -851,10 +877,9 @@ async function sendRegistrationEmail(driverEmail, vehicleData) {
 async function sendAccidentEmail(accidentId, accidentData) {
   const { lat, lng, severity, distance, locationName, driverEmail } = accidentData;
   
-  // Send crash alert to BOTH Admin and Vehicle Owner
   const recipients = [];
   if (emergencyContactEmail) {
-    recipients.push({ email: emergencyContactEmail, name: "Admin Emergency" });
+    recipients.push({ email: emergencyContactEmail, name: "Admin Dispatch" });
   }
   if (driverEmail && driverEmail !== emergencyContactEmail) {
     recipients.push({ email: driverEmail, name: "Vehicle Owner" });
@@ -862,27 +887,61 @@ async function sendAccidentEmail(accidentId, accidentData) {
   if (recipients.length === 0) return;
 
   const mapUrl = (lat && lng) ? `https://maps.google.com/?q=${lat},${lng}` : "https://maps.google.com/?q=24.3636,88.6283";
-  const vehicleName = accidentData.vehicleName || "Test Vehicle";
+  const vehicleName = accidentData.vehicleName || "RUET Test Vehicle";
+  const timestamp = new Date().toUTCString();
 
   const htmlContent = `
-    <div style="font-family:sans-serif; max-width:540px; margin:0 auto; padding:24px; background:#fff; border:1px solid #fee2e2; border-radius:12px;">
-      <div style="text-align:center; margin-bottom:16px;">
-        <span style="display:inline-block; padding:6px 14px; background:#fee2e2; color:#991b1b; font-weight:700; font-size:12px; border-radius:20px; text-transform:uppercase;">Emergency Alert</span>
-      </div>
-      <h2 style="color:#dc2626; margin:0 0 10px 0; text-align:center;">🚨 [CRITICAL ALERT] Vehicle Collision Detected</h2>
-      <p style="color:#475569; text-align:center; font-size:14px;">An emergency crash / obstacle event was detected by the LiDAR sensor.</p>
-      
-      <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:16px; margin:20px 0; font-size:13.5px;">
-        <p style="margin:6px 0;"><strong>🚗 Vehicle:</strong> ${vehicleName}</p>
-        <p style="margin:6px 0;"><strong>📍 Location:</strong> ${locationName || 'RUET Campus, Rajshahi'}</p>
-        <p style="margin:6px 0;"><strong>📏 Obstacle Distance:</strong> <span style="color:#dc2626; font-weight:700;">${distance || 10} cm</span></p>
-        <p style="margin:6px 0;"><strong>🛡️ System Action:</strong> Automatic Emergency Braking Engaged</p>
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 580px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; color: #1e293b;">
+      <div style="background-color: #991b1b; padding: 20px 24px; border-bottom: 2px solid #dc2626;">
+        <h1 style="color: #ffffff; font-size: 17px; font-weight: 600; margin: 0; letter-spacing: -0.2px;">IGHS Safety Alert: Obstacle Proximity Event</h1>
+        <p style="color: #fecaca; font-size: 12.5px; margin: 4px 0 0 0;">Incident Reference: ${accidentId || 'EVT-' + Date.now()}</p>
       </div>
 
-      <div style="text-align:center; margin-top:24px;">
-        <a href="${mapUrl}" target="_blank" style="display:inline-block; background:#0f172a; color:#ffffff; text-decoration:none; padding:12px 24px; font-size:14px; font-weight:600; border-radius:8px;">
-          📍 View Live Location in Google Maps ↗
-        </a>
+      <div style="padding: 24px;">
+        <p style="font-size: 14px; line-height: 1.5; color: #334155; margin: 0 0 16px 0;">
+          An automatic proximity trigger was recorded by the on-board LiDAR sensor. Collision avoidance braking has been signaled for vehicle <strong>${vehicleName}</strong>.
+        </p>
+
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin: 18px 0; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;">
+          <tr style="border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 10px 14px; color: #64748b; font-weight: 600; width: 40%;">Vehicle Unit</td>
+            <td style="padding: 10px 14px; color: #0f172a; font-weight: 600;">${vehicleName}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 10px 14px; color: #64748b; font-weight: 600;">Obstacle Distance</td>
+            <td style="padding: 10px 14px; color: #b91c1c; font-weight: 700;">${distance || 10} cm</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 10px 14px; color: #64748b; font-weight: 600;">System State</td>
+            <td style="padding: 10px 14px; color: #b91c1c; font-weight: 600;">Emergency Braking Protocol Active</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 10px 14px; color: #64748b; font-weight: 600;">Station / Sector</td>
+            <td style="padding: 10px 14px; color: #0f172a;">${locationName || 'RUET Campus, Rajshahi'}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 10px 14px; color: #64748b; font-weight: 600;">GPS Coordinates</td>
+            <td style="padding: 10px 14px; color: #0f172a; font-family: monospace;">${lat ? parseFloat(lat).toFixed(5) : '24.36360'} N, ${lng ? parseFloat(lng).toFixed(5) : '88.62830'} E</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 14px; color: #64748b; font-weight: 600;">Time of Event</td>
+            <td style="padding: 10px 14px; color: #0f172a;">${timestamp}</td>
+          </tr>
+        </table>
+
+        <div style="margin: 24px 0 16px 0; text-align: center;">
+          <a href="${mapUrl}" target="_blank" style="display: inline-block; background-color: #0f172a; color: #ffffff; text-decoration: none; font-size: 13.5px; font-weight: 600; padding: 11px 24px; border-radius: 6px;">
+            View Incident Coordinates on Map &rarr;
+          </a>
+        </div>
+
+        <p style="font-size: 12px; line-height: 1.5; color: #64748b; margin: 20px 0 0 0; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+          This is an automated safety alert dispatched according to highway monitoring protocols.
+        </p>
+      </div>
+
+      <div style="background-color: #f1f5f9; padding: 14px 24px; font-size: 11.5px; color: #64748b; border-top: 1px solid #e2e8f0; text-align: center;">
+        Intelligent Gateway & Highway Safety Network &bull; Automated Operations Console
       </div>
     </div>
   `;
@@ -897,9 +956,9 @@ async function sendAccidentEmail(accidentId, accidentData) {
         "api-key": directKey
       },
       body: JSON.stringify({
-        sender: { name: "IGHS Emergency System", email: brevoSenderEmail || "b6ba16001@smtp-brevo.com" },
+        sender: { name: "IGHS Safety Dispatch", email: brevoSenderEmail || "b6ba16001@smtp-brevo.com" },
         to: recipients,
-        subject: `🚨 [CRITICAL ALERT] Vehicle Crash Detected (${vehicleName})`,
+        subject: `Incident Report: Obstacle detected for ${vehicleName} near RUET`,
         htmlContent: htmlContent
       })
     });
@@ -907,7 +966,7 @@ async function sendAccidentEmail(accidentId, accidentData) {
     const data = await res.json();
     if (res.ok || (data && data.messageId)) {
       const recipientNames = recipients.map(r => r.email).join(", ");
-      showToast(`Emergency alert dispatched to ${recipientNames}`, "success");
+      showToast(`Incident alert dispatched to ${recipientNames}`, "success");
     }
   } catch (directErr) {
     console.warn("Direct Brevo API Notice:", directErr.message);
@@ -934,7 +993,7 @@ function setupSimulator() {
   if (emailInput && emergencyContactEmail) emailInput.value = emergencyContactEmail;
   if (senderInput && brevoSenderEmail) senderInput.value = brevoSenderEmail;
   if (providerSelect && smsProvider) providerSelect.value = smsProvider;
-  if (brevoKeyInput && brevoApiKey) brevoKeyInput.value = brevoApiKey;
+  if (brevoKeyInput) brevoKeyInput.value = brevoApiKey || DEFAULT_KEY;
 
   // Test SMS Dispatcher Button
   if (btnSendTestSms) {
@@ -953,7 +1012,7 @@ function setupSimulator() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             to: phone,
-            message: `[IGHS TEST] Emergency SMS Gateway verified! Vehicle tracking is armed at RUET Rajshahi.`,
+            message: `[IGHS Notification] Telemetry verification successful. Unit monitoring active at RUET Rajshahi.`,
             accidentId: "TEST_RUET_VERIFY",
             vehicleName: "Test Vehicle",
             provider: provider,
@@ -964,36 +1023,18 @@ function setupSimulator() {
         const data = await res.json();
         if (resultBox) {
           resultBox.style.display = "block";
-          if (data.success && data.provider === "brevo") {
-            resultBox.innerHTML = `
-              <div style="background:#dcfce7; border:1px solid #86efac; border-radius:8px; padding:14px; color:#166534; font-size:13.5px;">
-                <strong>✓ Brevo SMS Dispatched!</strong><br>
-                Recipient: <code>+${data.to}</code> | Gateway: <strong>Brevo Transactional API</strong>
-              </div>
-            `;
-          } else {
-            resultBox.innerHTML = `
-              <div style="background:#fef3c7; border:1px solid #fcd34d; border-radius:8px; padding:14px; color:#92400e; font-size:13.5px;">
-                <strong>SMS Dispatched</strong><br>
-                Recipient: <code>${data.to || phone}</code> | Provider: <strong>${data.provider}</strong>
-              </div>
-            `;
-          }
-        }
-        showToast(`SMS sent to ${phone}`, "success");
-      } catch (err) {
-        if (resultBox) {
-          resultBox.style.display = "block";
           resultBox.innerHTML = `
-            <div style="background:#fee2e2; border:1px solid #fca5a5; border-radius:8px; padding:14px; color:#991b1b; font-size:13.5px;">
-              <strong>SMS Dispatch Error:</strong> ${err.message}
+            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; padding:12px; color:#166534; font-size:13px;">
+              <strong>SMS Dispatched Successfully:</strong> Recipient <code>+${data.to || phone}</code>
             </div>
           `;
         }
+        showToast(`SMS sent to ${phone}`, "success");
+      } catch (err) {
         showToast("SMS error: " + err.message, "error");
       } finally {
         btnSendTestSms.disabled = false;
-        btnSendTestSms.textContent = "📲 Send Test Emergency SMS";
+        btnSendTestSms.textContent = "Send Test Emergency SMS";
       }
     };
   }
@@ -1006,101 +1047,103 @@ function setupSimulator() {
       const resultBox = document.getElementById("sms-dispatch-result");
 
       btnSendTestEmail.disabled = true;
-      btnSendTestEmail.textContent = "Sending Email...";
+      btnSendTestEmail.textContent = "Sending Verification Email...";
 
-      const emailPayload = {
-        to: email,
-        senderEmail: sender,
-        vehicleName: "RUET Vehicle Alpha",
-        lat: RUET_COORDS.lat,
-        lng: RUET_COORDS.lng,
-        distance: 8,
-        severity: "CRITICAL (Obstacle < 8 cm)"
-      };
+      const timestamp = new Date().toUTCString();
+      const htmlContent = `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 580px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; color: #1e293b;">
+          <div style="background-color: #0f172a; padding: 20px 24px; border-bottom: 2px solid #3b82f6;">
+            <h1 style="color: #ffffff; font-size: 17px; font-weight: 600; margin: 0;">IGHS Safety & Telemetry Network</h1>
+            <p style="color: #94a3b8; font-size: 12.5px; margin: 4px 0 0 0;">System Verification Report</p>
+          </div>
+
+          <div style="padding: 24px;">
+            <p style="font-size: 14px; line-height: 1.5; color: #334155; margin: 0 0 16px 0;">
+              This test verification confirms that your recipient address is authenticated and configured to receive critical telemetry and collision alerts.
+            </p>
+
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin: 18px 0; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;">
+              <tr style="border-bottom: 1px solid #e2e8f0;">
+                <td style="padding: 10px 14px; color: #64748b; font-weight: 600; width: 40%;">Gateway Status</td>
+                <td style="padding: 10px 14px; color: #16a34a; font-weight: 600;">Operational / Online</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e2e8f0;">
+                <td style="padding: 10px 14px; color: #64748b; font-weight: 600;">Recipient Address</td>
+                <td style="padding: 10px 14px; color: #0f172a; font-weight: 600;">${email}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e2e8f0;">
+                <td style="padding: 10px 14px; color: #64748b; font-weight: 600;">Base Station</td>
+                <td style="padding: 10px 14px; color: #0f172a;">RUET Campus (24.3636 N, 88.6283 E)</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px 14px; color: #64748b; font-weight: 600;">Dispatch Timestamp</td>
+                <td style="padding: 10px 14px; color: #0f172a;">${timestamp}</td>
+              </tr>
+            </table>
+
+            <div style="margin: 24px 0 16px 0; text-align: center;">
+              <a href="https://maps.google.com/?q=24.3636,88.6283" target="_blank" style="display: inline-block; background-color: #2563eb; color: #ffffff; text-decoration: none; font-size: 13.5px; font-weight: 600; padding: 11px 24px; border-radius: 6px;">
+                Open Network Map &rarr;
+              </a>
+            </div>
+          </div>
+
+          <div style="background-color: #f1f5f9; padding: 14px 24px; font-size: 11.5px; color: #64748b; border-top: 1px solid #e2e8f0; text-align: center;">
+            Intelligent Gateway & Highway Safety System &bull; Department of EEE, RUET
+          </div>
+        </div>
+      `;
 
       let isSent = false;
       let errorDetail = "";
 
-      // 1. Try local server endpoint if on localhost
-      if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
-        try {
-          const res = await fetch(`${location.origin}/email`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(emailPayload)
-          });
-          const text = await res.text();
-          if (text) {
-            const data = JSON.parse(text);
-            if (data && data.success) isSent = true;
-            else if (data && data.error) errorDetail = data.error;
-          }
-        } catch (err) {
-          errorDetail = err.message;
+      try {
+        const key = (brevoKeyInput && brevoKeyInput.value.trim()) || brevoApiKey || DEFAULT_KEY;
+        const bRes = await fetch("https://api.brevo.com/v3/smtp/email", {
+          method: "POST",
+          headers: {
+            "accept": "application/json",
+            "content-type": "application/json",
+            "api-key": key
+          },
+          body: JSON.stringify({
+            sender: { name: "IGHS Telemetry Network", email: sender },
+            to: [{ email: email, name: "System Administrator" }],
+            subject: `IGHS Verification: Telemetry dispatch channel verified`,
+            htmlContent: htmlContent
+          })
+        });
+
+        const bText = await bRes.text();
+        let bData = {};
+        try { bData = JSON.parse(bText); } catch(e) {}
+
+        if (bRes.ok || (bData && bData.messageId)) {
+          isSent = true;
+        } else {
+          errorDetail = bData?.message || bText || "Brevo API verification error";
         }
-      }
-
-      // 2. Direct Cloudflare Pages Fallback via Brevo REST API
-      if (!isSent) {
-        try {
-          const htmlContent = `
-            <div style="font-family:sans-serif; max-width:540px; margin:0 auto; padding:20px; background:#fff; border:1px solid #e2e8f0; border-radius:10px;">
-              <h2 style="color:#dc2626; margin:0 0 10px 0;">🚨 [TEST ALERT] Vehicle Safety Verification</h2>
-              <p><strong>Status:</strong> Emergency Alert System Verified & Active</p>
-              <p><strong>Location:</strong> RUET Campus, Rajshahi</p>
-              <p><strong>GPS:</strong> 24.3636, 88.6283</p>
-              <p><a href="https://maps.google.com/?q=24.3636,88.6283" style="display:inline-block; padding:10px 18px; background:#0f172a; color:#fff; text-decoration:none; border-radius:6px;">View on Google Maps ↗</a></p>
-            </div>
-          `;
-
-          const key = (brevoKeyInput && brevoKeyInput.value.trim()) || brevoApiKey || DEFAULT_KEY;
-          const bRes = await fetch("https://api.brevo.com/v3/smtp/email", {
-            method: "POST",
-            headers: {
-              "accept": "application/json",
-              "content-type": "application/json",
-              "api-key": key
-            },
-            body: JSON.stringify({
-              sender: { name: "IGHS Emergency System", email: sender },
-              to: [{ email: email }],
-              subject: `🚨 [TEST ALERT] Emergency System Verified (${emailPayload.vehicleName})`,
-              htmlContent: htmlContent
-            })
-          });
-
-          const bText = await bRes.text();
-          let bData = {};
-          try { bData = JSON.parse(bText); } catch(e) {}
-
-          if (bRes.ok || (bData && bData.messageId)) {
-            isSent = true;
-          } else {
-            errorDetail = bData?.message || bText || "Brevo API verification error";
-          }
-        } catch (err) {
-          errorDetail = err.message;
-        }
+      } catch (err) {
+        errorDetail = err.message;
       }
 
       if (isSent) {
         if (resultBox) {
           resultBox.style.display = "block";
           resultBox.innerHTML = `
-            <div style="background:#dcfce7; border:1px solid #86efac; border-radius:8px; padding:14px; color:#166534; font-size:13.5px;">
-              <strong>✓ Test Emergency Email Sent!</strong><br>
-              Recipient: <code>${email}</code> | Sender: <code>${sender}</code><br>
-              Check your email inbox (and Spam folder) for the incident report!
+            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; padding:14px; color:#166534; font-size:13.5px;">
+              <strong>Verification Email Dispatched Successfully:</strong><br>
+              Recipient: <code>${email}</code> | Sender: <code>${sender}</code>
             </div>
           `;
         }
-        showToast(`Emergency alert email dispatched to ${email}`, "success");
+        showToast(`Verification email dispatched to ${email}`, "success");
       } else {
         if (resultBox) {
           resultBox.style.display = "block";
           resultBox.innerHTML = `
-            <div style="background:#fee2e2; border:1px solid #fca5a5; border-radius:8px; padding:14px; color:#991b1b; font-size:13.5px;">
-              <strong>Email Dispatch Notice:</strong> ${errorDetail || "Check Brevo sender authentication."}
+            <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:6px; padding:14px; color:#991b1b; font-size:13.5px;">
+              <strong>Dispatch Notice:</strong> ${errorDetail || "Check Brevo sender authentication."}
             </div>
           `;
         }
@@ -1108,7 +1151,7 @@ function setupSimulator() {
       }
 
       btnSendTestEmail.disabled = false;
-      btnSendTestEmail.textContent = "📧 Send Test Emergency Alert Email";
+      btnSendTestEmail.textContent = "Send Test Emergency Alert Email";
     };
   }
 }
