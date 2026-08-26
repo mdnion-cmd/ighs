@@ -1490,20 +1490,69 @@ function hideDashboardSection() {
   if (el) el.style.display = "none";
 }
 
-function showDashboardSection(user, role) {
-  const emailEl = navUserEmail || document.getElementById("nav-user-email");
-  const badgeEl = navRoleBadge || document.getElementById("nav-role-badge");
-  const dashEl  = dashboardSection || document.getElementById("dashboard-section");
+window.toggleProfileDropdown = (e) => {
+  if (e) e.stopPropagation();
+  const menu = document.getElementById("profile-dropdown-menu");
+  const btn = document.getElementById("profile-dropdown-btn");
+  if (!menu) return;
+  const isHidden = menu.style.display === "none" || !menu.style.display;
+  menu.style.display = isHidden ? "block" : "none";
+  if (btn) btn.setAttribute("aria-expanded", isHidden ? "true" : "false");
+};
 
-  if (emailEl) emailEl.textContent = user.email;
-  if (badgeEl) {
-    badgeEl.textContent = (role === "admin") ? "Admin" : "User";
-    badgeEl.className   = (role === "admin") ? "role-badge role-badge--admin" : "role-badge role-badge--user";
+window.closeProfileDropdown = () => {
+  const menu = document.getElementById("profile-dropdown-menu");
+  const btn = document.getElementById("profile-dropdown-btn");
+  if (menu) menu.style.display = "none";
+  if (btn) btn.setAttribute("aria-expanded", "false");
+};
+
+window.switchMainTabAndClose = (tabName) => {
+  window.switchMainTab(tabName);
+  window.closeProfileDropdown();
+};
+
+document.addEventListener("click", (e) => {
+  const menu = document.getElementById("profile-dropdown-menu");
+  const btn = document.getElementById("profile-dropdown-btn");
+  if (menu && menu.style.display === "block") {
+    if (!menu.contains(e.target) && !btn?.contains(e.target)) {
+      window.closeProfileDropdown();
+    }
+  }
+});
+
+function showDashboardSection(user, role) {
+  const dashEl = dashboardSection || document.getElementById("dashboard-section");
+
+  const avatarEl = document.getElementById("nav-user-avatar");
+  const shortNameEl = document.getElementById("nav-user-short-name");
+  const dropdownEmailEl = document.getElementById("dropdown-user-email");
+  const dropdownRoleBadge = document.getElementById("dropdown-role-badge");
+
+  const email = user.email || "user@ighs.gov.bd";
+  const namePrefix = (user.displayName || email.split("@")[0]);
+  const initial = namePrefix.charAt(0).toUpperCase() || "U";
+
+  if (avatarEl) {
+    if (user.photoURL) {
+      avatarEl.innerHTML = `<img src="${user.photoURL}" alt="${namePrefix}" style="width:100%; height:100%; object-fit:cover;">`;
+    } else {
+      avatarEl.textContent = initial;
+      avatarEl.style.background = "#4F46E5";
+    }
+  }
+
+  if (shortNameEl) shortNameEl.textContent = namePrefix;
+  if (dropdownEmailEl) dropdownEmailEl.textContent = email;
+  if (dropdownRoleBadge) {
+    dropdownRoleBadge.textContent = (role === "admin") ? "Admin" : "User";
+    dropdownRoleBadge.className = (role === "admin") ? "role-badge role-badge--admin" : "role-badge role-badge--user";
   }
 
   const userPanelEmail = document.getElementById("user-panel-email");
   const userPanelRole  = document.getElementById("user-panel-role");
-  if (userPanelEmail) userPanelEmail.textContent = user.email;
+  if (userPanelEmail) userPanelEmail.textContent = email;
   if (userPanelRole)  userPanelRole.textContent  = role.toUpperCase();
 
   renderAdminPanel(role);
