@@ -401,6 +401,7 @@ window.openAddVehicleModal = () => {
   const form = document.getElementById("vehicle-registration-form");
   const title = document.getElementById("vehicle-modal-title");
   const mode = document.getElementById("vehicle-form-mode");
+  const docId = document.getElementById("vehicle-form-doc-id");
   const idInput = document.getElementById("vehicle-input-id");
   const nameInput = document.getElementById("vehicle-input-name");
   const locInput = document.getElementById("vehicle-input-location");
@@ -412,28 +413,42 @@ window.openAddVehicleModal = () => {
   if (form) form.reset();
   if (mode) mode.value = "add";
   if (title) title.textContent = "Register New Vehicle";
+
+  // Auto calculate next available unique vehicle number
+  let nextNum = (vehicleMarkers.size || 0) + 1;
+  let autoId = `esp32-ruet-${String(nextNum).padStart(2, "0")}`;
+  while (vehicleMarkers.has(autoId)) {
+    nextNum++;
+    autoId = `esp32-ruet-${String(nextNum).padStart(2, "0")}`;
+  }
+
+  // Slight coordinate offset so pins don't overlap completely
+  const offset = (nextNum - 1) * 0.001;
+  const defLat = (RUET_COORDS.lat + (nextNum % 2 === 0 ? offset : -offset)).toFixed(5);
+  const defLng = (RUET_COORDS.lng + (nextNum > 2 ? offset : -offset)).toFixed(5);
+
   if (idInput) {
     idInput.disabled = false;
-    idInput.value = "";
-    idInput.placeholder = "e.g. esp32-ruet-01";
+    idInput.value = autoId;
+    idInput.placeholder = autoId;
   }
   if (nameInput) {
-    nameInput.value = "";
-    nameInput.placeholder = "e.g. Autonomous Test Vehicle";
+    nameInput.value = `Vehicle Unit ${nextNum}`;
+    nameInput.placeholder = `e.g. Vehicle Unit ${nextNum}`;
   }
   if (locInput) {
-    locInput.value = "";
+    locInput.value = "RUET Campus, Rajshahi";
     locInput.placeholder = "e.g. RUET Campus, Rajshahi";
   }
   if (phoneInput) phoneInput.value = "";
   if (emailInput) emailInput.value = "";
   if (latInput) {
-    latInput.value = "";
-    latInput.placeholder = "24.3636";
+    latInput.value = defLat;
+    latInput.placeholder = defLat;
   }
   if (lngInput) {
-    lngInput.value = "";
-    lngInput.placeholder = "88.6283";
+    lngInput.value = defLng;
+    lngInput.placeholder = defLng;
   }
 
   if (modal) modal.style.display = "flex";
@@ -488,9 +503,17 @@ window.handleSaveVehicle = async (e) => {
   const lngInput = document.getElementById("vehicle-input-lng");
   const btnSave = document.getElementById("btn-save-vehicle");
 
-  const rawId = (mode === "add" ? idInput?.value.trim() : docId);
-  const targetId = rawId || "esp32-ruet-" + Math.floor(100 + Math.random() * 900);
-  const vehicleName = nameInput?.value.trim() || "Vehicle Unit";
+  let targetId = (mode === "add" ? idInput?.value.trim() : docId);
+  if (!targetId) {
+    targetId = "esp32-ruet-" + Math.floor(100 + Math.random() * 900);
+  }
+
+  // If in ADD mode and ID already exists, prevent accidental overwrite by appending unique suffix
+  if (mode === "add" && vehicleMarkers.has(targetId)) {
+    targetId = `${targetId}-${Math.floor(10 + Math.random() * 90)}`;
+  }
+
+  const vehicleName = nameInput?.value.trim() || `Vehicle (${targetId})`;
   const locationName = locInput?.value.trim() || "RUET Campus, Rajshahi";
   const driverPhone = phoneInput?.value.trim() || "";
   const driverEmail = emailInput?.value.trim() || "";
@@ -515,7 +538,7 @@ window.handleSaveVehicle = async (e) => {
         status: "SAFE",
         lastUpdate: serverTimestamp()
       });
-      showToast(`Vehicle '${vehicleName}' registered!`, "success");
+      showToast(`Vehicle '${vehicleName}' (${targetId}) registered!`, "success");
 
       // Auto dispatch registration email if driverEmail was provided
       if (driverEmail) {
@@ -870,7 +893,7 @@ async function sendRegistrationEmail(driverEmail, vehicleData) {
 
   try {
     const key = (document.getElementById("brevo-key-input")?.value?.trim()) || brevoApiKey || DEFAULT_KEY;
-    const sender = (document.getElementById("brevo-sender-email-input")?.value?.trim()) || brevoSenderEmail || "b6ba16001@smtp-brevo.com";
+    const sender = (document.getElementById("brevo-sender-email-input")?.value?.trim()) || brevoSenderEmail || "email@mdnion.xyz";
 
     const res = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
@@ -983,7 +1006,7 @@ async function sendAccidentEmail(accidentId, accidentData) {
         "api-key": directKey
       },
       body: JSON.stringify({
-        sender: { name: "IGHS Safety Dispatch", email: brevoSenderEmail || "b6ba16001@smtp-brevo.com" },
+        sender: { name: "IGHS Safety Dispatch", email: brevoSenderEmail || "email@mdnion.xyz" },
         to: recipients,
         subject: `Incident Report: Obstacle detected for ${vehicleName} near RUET`,
         htmlContent: htmlContent
@@ -1070,7 +1093,7 @@ function setupSimulator() {
   if (btnSendTestEmail) {
     btnSendTestEmail.onclick = async () => {
       const email = emailInput ? emailInput.value.trim() : emergencyContactEmail;
-      const sender = senderInput ? senderInput.value.trim() : (brevoSenderEmail || "b6ba16001@smtp-brevo.com");
+      const sender = senderInput ? senderInput.value.trim() : (brevoSenderEmail || "email@mdnion.xyz");
       const resultBox = document.getElementById("sms-dispatch-result");
 
       btnSendTestEmail.disabled = true;
