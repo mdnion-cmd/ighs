@@ -45,8 +45,7 @@ const RUET_COORDS = { lat: 24.3636, lng: 88.6283 };
 
 let emergencyContactPhone = localStorage.getItem("ighs_emergency_phone") || "01711000000";
 let emergencyContactEmail = localStorage.getItem("ighs_emergency_email") || "admin@ighs.gov.bd";
-let brevoSenderEmail = localStorage.getItem("ighs_brevo_sender") || "ratulislam123@gmail.com";
-let smsProvider = localStorage.getItem("ighs_sms_provider") || "brevo";
+let brevoSenderEmail = localStorage.getItem("ighs_brevo_sender") || "b6ba16001@smtp-brevo.com";
 let brevoApiKey = localStorage.getItem("ighs_brevo_key") || "";
 
 // Map & Vehicles State
