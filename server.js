@@ -294,9 +294,9 @@ const server = http.createServer((req, res) => {
           });
 
           const info = await transporter.sendMail({
-            from: `"IGHS Emergency System" <${sender}>`,
+            from: `"IGHS Safety Dispatch" <${sender}>`,
             to: recipientEmail,
-            subject: `🚨 [CRITICAL ALERT] Vehicle Crash Detected at RUET (${vehicleName || "Test Vehicle"})`,
+            subject: `Incident Report: Obstacle detected for ${vehicleName || "Vehicle"} near RUET`,
             html: htmlContent
           });
 
@@ -438,9 +438,9 @@ const server = http.createServer((req, res) => {
           });
 
           const info = await transporter.sendMail({
-            from: `"IGHS Vehicle Registry" <${sender}>`,
+            from: `"IGHS Telemetry Network" <${sender}>`,
             to: to,
-            subject: `🚗 [Vehicle Registered] ${vehicleName} is now active on IGHS Telemetry`,
+            subject: `IGHS Telemetry: Unit ${vehicleId || "Unit"} (${vehicleName}) is active`,
             html: htmlContent
           });
 
