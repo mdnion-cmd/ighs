@@ -311,14 +311,11 @@ function startFleetTracking() {
             ${v.driverEmail ? `<span style="font-size: 11px; color: #64748B;">Owner: ${v.driverEmail}</span>` : ''}
           </div>
 
-          <div style="display: flex; justify-content: flex-end; gap: 6px; margin-top: 10px; padding-top: 8px; border-top: 1px solid #F1F5F9; flex-wrap: wrap;">
-            <button type="button" class="btn btn--outline" style="padding: 4px 10px; font-size: 11.5px; border-radius: 6px; color: #DC2626; border-color: #FECACA; background: #FEF2F2; font-weight: 600;" onclick="window.triggerTestEmergency('${vid}')" title="Simulate obstacle collision for this vehicle">
-              🚨 Test Crash
-            </button>
+          <div style="display: flex; justify-content: flex-end; gap: 6px; margin-top: 10px; padding-top: 8px; border-top: 1px solid #F1F5F9;">
             <button type="button" class="btn btn--outline" style="padding: 4px 10px; font-size: 11.5px; border-radius: 6px;" onclick="window.openEditVehicleModal('${vid}', '${safeName}', '${safeLoc}', ${lat}, ${lng}, '${safePhone}', '${safeEmail}')">
               Edit
             </button>
-            <button type="button" class="btn btn--outline" style="padding: 4px 10px; font-size: 11.5px; border-radius: 6px; color: #64748B;" onclick="window.deleteVehicle('${vid}', '${safeName}')">
+            <button type="button" class="btn btn--outline" style="padding: 4px 10px; font-size: 11.5px; border-radius: 6px; color: #DC2626; border-color: #FECACA;" onclick="window.deleteVehicle('${vid}', '${safeName}')">
               Delete
             </button>
           </div>
