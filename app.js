@@ -130,7 +130,7 @@ function showToast(message, type = "info") {
 // 4. TOP NAVIGATION TAB SYSTEM (Tracking / SMS / Hardware / Account)
 // =============================================================================
 window.switchMainTab = (tabName) => {
-  const tabs = ["tracking", "sms", "hardware", "account"];
+  const tabs = ["tracking", "sms", "account"];
   tabs.forEach(t => {
     const pane = document.getElementById(`tab-content-${t}`);
     const btn = document.getElementById(`nav-tab-${t}`);
