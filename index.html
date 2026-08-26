@@ -181,11 +181,55 @@
 
         <div class="navbar__spacer"></div>
 
-        <!-- User info + logout -->
-        <div class="navbar__user">
-          <span id="nav-user-email" class="navbar__email"></span>
-          <span id="nav-role-badge" class="role-badge"></span>
-          <button id="logout-btn" class="btn btn--ghost btn--sm">Sign Out</button>
+        <!-- User Profile Avatar Button & Dropdown -->
+        <div class="navbar__user-menu" style="position: relative;">
+          <button id="profile-dropdown-btn" type="button" class="profile-avatar-btn" aria-expanded="false" aria-haspopup="true" onclick="window.toggleProfileDropdown(event)" style="display: flex; align-items: center; gap: 8px; background: #F1F5F9; border: 1px solid #E2E8F0; padding: 4px 10px 4px 4px; border-radius: 9999px; cursor: pointer; transition: all 0.2s ease;">
+            <div id="nav-user-avatar" style="width: 30px; height: 30px; border-radius: 50%; background: #4F46E5; color: #ffffff; font-weight: 700; font-size: 13.5px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1.5px solid #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+              U
+            </div>
+            <span id="nav-user-short-name" style="font-size: 13px; font-weight: 600; color: #1E293B; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">User</span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+
+          <!-- Dropdown Popup Card -->
+          <div id="profile-dropdown-menu" class="profile-dropdown-menu" style="display: none; position: absolute; right: 0; top: calc(100% + 8px); width: 260px; background: #ffffff; border: 1px solid #E2E8F0; border-radius: 12px; box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08); padding: 8px; z-index: 9999;">
+            
+            <!-- User Info Header -->
+            <div style="padding: 10px 12px; background: #F8FAFC; border-radius: 8px; margin-bottom: 6px;">
+              <div style="font-size: 11px; color: #64748B; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Account</div>
+              <div id="dropdown-user-email" style="font-size: 13px; font-weight: 700; color: #0F172A; word-break: break-all; margin-top: 2px;"></div>
+              <div style="margin-top: 6px;">
+                <span id="dropdown-role-badge" class="role-badge">User</span>
+              </div>
+            </div>
+
+            <!-- Menu Links -->
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+              <button type="button" class="dropdown-item-btn" onclick="window.switchMainTabAndClose('tracking')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+                <span>Live Tracking Map</span>
+              </button>
+              
+              <button type="button" class="dropdown-item-btn" onclick="window.switchMainTabAndClose('sms')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <span>Email Gateway Setup</span>
+              </button>
+
+              <button type="button" class="dropdown-item-btn" onclick="window.switchMainTabAndClose('account')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <span>Account Profile</span>
+              </button>
+            </div>
+
+            <div style="border-top: 1px solid #F1F5F9; margin: 6px 0; padding-top: 6px;">
+              <button id="logout-btn" type="button" class="dropdown-item-btn" style="color: #DC2626; font-weight: 600; width: 100%;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                <span>Sign Out</span>
+              </button>
+            </div>
+          </div>
         </div>
 
       </div>
