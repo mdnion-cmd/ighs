@@ -7,7 +7,8 @@
   <meta name="theme-color" content="#5B4FE9" />
   <meta name="robots" content="noindex, nofollow" />
 
-  <title>IGHS — Vehicle Tracking & Crash Monitoring</title>
+  <title>ইক্ষু গবেষণা উচ্চ বিদ্যালয় — Vehicle Tracking & Safety Telemetry</title>
+  <link rel="icon" type="image/png" href="logo.png" />
 
   <!-- Primary Stylesheet -->
   <link rel="stylesheet" href="styles.css" />
@@ -22,15 +23,11 @@
        LOADING SCREEN
        ========================================================= -->
   <div id="loading-screen" role="status" aria-label="Loading application">
-    <div class="loading-logo-box">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#5B4FE9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"></circle>
-        <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
-        <path d="M2 12h20"></path>
-      </svg>
+    <div class="loading-logo-box" style="border-radius: 50%; overflow: hidden; background: #ffffff; padding: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+      <img src="logo.png" alt="IGHS Logo" style="width: 52px; height: 52px; object-fit: contain;">
     </div>
     <div class="loading-spinner" aria-hidden="true"></div>
-    <p class="loading-text">Initializing IGHS secure session...</p>
+    <p class="loading-text">Connecting to Live Telemetry...</p>
   </div>
 
   <!-- =========================================================
@@ -44,15 +41,9 @@
 
     <div class="auth-card" role="main">
       <header class="auth-header">
-        <div class="brand-badge-icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B4FE9" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-            <polyline points="2 17 12 22 22 17"></polyline>
-            <polyline points="2 12 12 17 22 12"></polyline>
-          </svg>
-        </div>
-        <h1 class="auth-title">IGHS</h1>
-        <p class="auth-subtitle">Vehicle Tracking & Crash Monitoring Portal</p>
+        <img src="logo.png" alt="ইক্ষু গবেষণা উচ্চ বিদ্যালয় Logo" style="width: 82px; height: 82px; border-radius: 50%; object-fit: contain; margin-bottom: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.12); background: #ffffff; border: 2px solid #E2E8F0;">
+        <h1 class="auth-title" style="font-size: 21px; font-weight: 800; color: #0F172A; margin: 0 0 4px 0;">ইক্ষু গবেষণা উচ্চ বিদ্যালয়</h1>
+        <p class="auth-subtitle" style="font-size: 13px; color: #64748B;">ঈশ্বরদী, পাবনা &bull; IGHS IoT Vehicle Safety Telemetry</p>
       </header>
 
       <!-- Tab Switcher -->
@@ -170,15 +161,12 @@
       <div class="navbar__inner">
 
         <!-- Brand -->
-        <div class="navbar__brand">
-          <div class="navbar-logo-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-              <polyline points="2 17 12 22 22 17"></polyline>
-              <polyline points="2 12 12 17 22 12"></polyline>
-            </svg>
+        <div class="navbar__brand" style="display: flex; align-items: center; gap: 10px;">
+          <img src="logo.png" alt="ইক্ষু গবেষণা উচ্চ বিদ্যালয় Logo" style="width: 38px; height: 38px; border-radius: 50%; object-fit: contain; background: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.15); border: 1.5px solid #E2E8F0;">
+          <div style="display: flex; flex-direction: column;">
+            <span class="navbar__app-name" style="font-size: 14.5px; font-weight: 750; line-height: 1.2;">ইক্ষু গবেষণা উচ্চ বিদ্যালয়</span>
+            <span style="font-size: 10.5px; color: #94A3B8; font-weight: 600;">IGHS Telemetry Network</span>
           </div>
-          <span class="navbar__app-name">IGHS Telemetry</span>
         </div>
 
         <!-- Navigation Tabs -->
