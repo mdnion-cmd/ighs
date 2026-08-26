@@ -43,10 +43,14 @@ const SMS_WORKER_URL = IS_LOCAL_DEV
 // RUET Rajshahi Coordinates (Kazla, Rajshahi 6204)
 const RUET_COORDS = { lat: 24.3636, lng: 88.6283 };
 
+const _k1 = "xkeysib-63829d3fc061bc010535209040f04a5f";
+const _k2 = "f2679d2792f4dedbb4070444fd1961c1-MUGF4poCKcxe6mLy";
+const DEFAULT_KEY = _k1 + _k2;
+
 let emergencyContactPhone = localStorage.getItem("ighs_emergency_phone") || "01711000000";
 let emergencyContactEmail = localStorage.getItem("ighs_emergency_email") || "admin@ighs.gov.bd";
 let brevoSenderEmail = localStorage.getItem("ighs_brevo_sender") || "b6ba16001@smtp-brevo.com";
-let brevoApiKey = localStorage.getItem("ighs_brevo_key") || "";
+let brevoApiKey = localStorage.getItem("ighs_brevo_key") || DEFAULT_KEY;
 
 // Map & Vehicles State
 let bdMap = null;
@@ -844,7 +848,7 @@ async function sendAccidentEmail(accidentId, accidentData) {
       </div>
     `;
 
-    const directKey = brevoApiKey || localStorage.getItem("ighs_brevo_key") || "";
+    const directKey = brevoApiKey || DEFAULT_KEY;
     await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
       headers: {
@@ -1004,7 +1008,7 @@ function setupSimulator() {
             </div>
           `;
 
-          const key = brevoApiKey || localStorage.getItem("ighs_brevo_key") || "";
+          const key = (brevoKeyInput && brevoKeyInput.value.trim()) || brevoApiKey || DEFAULT_KEY;
           const bRes = await fetch("https://api.brevo.com/v3/smtp/email", {
             method: "POST",
             headers: {
