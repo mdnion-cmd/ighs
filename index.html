@@ -221,7 +221,26 @@
               <h2 class="panel__title">Live GPS Vehicle Tracking & Crash Monitoring</h2>
               <span id="live-stream-badge" class="badge" style="background:#dcfce7; color:#166534; font-weight:700; border:1px solid #bbf7d0;">Real-Time Active</span>
             </div>
-            <p class="panel__subtitle">Real-time GPS telemetry from vehicle sensors (Location: <strong>RUET Campus, Rajshahi</strong>)</p>
+            <p class="panel__subtitle">Real-time telemetry and collision avoidance monitoring (Location: <strong>RUET Campus, Rajshahi</strong>)</p>
+          </div>
+
+          <!-- Emergency Telemetry & Simulator Control Bar -->
+          <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 12px 16px; margin: 0 20px 16px 20px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 13px; font-weight: 700; color: #1E293B;">🧪 Testing & Demo Controls:</span>
+              <span style="font-size: 12px; color: #64748B;">Test emergency braking, audio siren, and live incident email dispatch</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <button type="button" class="btn btn--danger btn--sm" onclick="window.triggerTestEmergency()" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; padding: 8px 15px; background: #DC2626; color: #ffffff; border-radius: 6px; box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25); border: none; cursor: pointer;">
+                🚨 Trigger Crash Alert (&lt;15cm)
+              </button>
+              <button type="button" class="btn btn--outline btn--sm" onclick="window.resetVehicleToSafe()" style="font-weight: 600; padding: 7px 14px; color: #16A34A; border-color: #86EFAC; background: #F0FDF4; border-radius: 6px; cursor: pointer;">
+                🟢 Reset to Safe (100cm)
+              </button>
+              <button type="button" id="btn-toggle-sound" class="btn btn--ghost btn--sm" onclick="window.toggleAudioAlert()" style="font-size: 12px; font-weight: 600; color: #475569; cursor: pointer;">
+                🔊 Sound: ON
+              </button>
+            </div>
           </div>
 
           <div class="map-layout">
