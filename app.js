@@ -311,11 +311,14 @@ function startFleetTracking() {
             ${v.driverEmail ? `<span style="font-size: 11px; color: #64748B;">Owner: ${v.driverEmail}</span>` : ''}
           </div>
 
-          <div style="display: flex; justify-content: flex-end; gap: 6px; margin-top: 10px; padding-top: 8px; border-top: 1px solid #F1F5F9;">
+          <div style="display: flex; justify-content: flex-end; gap: 6px; margin-top: 10px; padding-top: 8px; border-top: 1px solid #F1F5F9; flex-wrap: wrap;">
+            <button type="button" class="btn btn--outline" style="padding: 4px 10px; font-size: 11.5px; border-radius: 6px; color: #DC2626; border-color: #FECACA; background: #FEF2F2; font-weight: 600;" onclick="window.triggerTestEmergency('${vid}')" title="Simulate obstacle collision for this vehicle">
+              🚨 Test Crash
+            </button>
             <button type="button" class="btn btn--outline" style="padding: 4px 10px; font-size: 11.5px; border-radius: 6px;" onclick="window.openEditVehicleModal('${vid}', '${safeName}', '${safeLoc}', ${lat}, ${lng}, '${safePhone}', '${safeEmail}')">
               Edit
             </button>
-            <button type="button" class="btn btn--outline" style="padding: 4px 10px; font-size: 11.5px; border-radius: 6px; color: #DC2626; border-color: #FECACA;" onclick="window.deleteVehicle('${vid}', '${safeName}')">
+            <button type="button" class="btn btn--outline" style="padding: 4px 10px; font-size: 11.5px; border-radius: 6px; color: #64748B;" onclick="window.deleteVehicle('${vid}', '${safeName}')">
               Delete
             </button>
           </div>
@@ -325,6 +328,7 @@ function startFleetTracking() {
       // If DANGER state just triggered from NodeMCU live stream
       if (isDanger && !lastHandledDangerState) {
         lastHandledDangerState = true;
+        playEmergencySiren();
         showAccidentPopupModal(vid, {
           lat: lat,
           lng: lng,
@@ -1072,8 +1076,137 @@ async function sendAccidentEmail(accidentId, accidentData) {
 }
 
 // =============================================================================
-// 8. SIMULATOR ACTIONS & DEMONSTRATION
+// 8. SIMULATOR ACTIONS & AUDIO EMERGENCY SIREN
 // =============================================================================
+let audioCtx = null;
+let isSoundEnabled = true;
+
+function playEmergencySiren() {
+  if (!isSoundEnabled) return;
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
+
+    const now = audioCtx.currentTime;
+    for (let i = 0; i < 3; i++) {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(880, now + i * 0.28);
+      osc.frequency.exponentialRampToValueAtTime(440, now + i * 0.28 + 0.20);
+
+      gain.gain.setValueAtTime(0.25, now + i * 0.28);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.28 + 0.24);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(now + i * 0.28);
+      osc.stop(now + i * 0.28 + 0.25);
+    }
+  } catch (e) {
+    console.warn("Audio siren:", e);
+  }
+}
+
+window.toggleAudioAlert = () => {
+  isSoundEnabled = !isSoundEnabled;
+  const btn = document.getElementById("btn-toggle-sound");
+  if (btn) {
+    btn.textContent = isSoundEnabled ? "🔊 Sound: ON" : "🔇 Sound: OFF";
+    btn.style.color = isSoundEnabled ? "#16A34A" : "#94A3B8";
+  }
+  showToast(`Emergency Audio Siren: ${isSoundEnabled ? 'ENABLED' : 'MUTED'}`, "info");
+  if (isSoundEnabled) playEmergencySiren();
+};
+
+window.triggerTestEmergency = async (specificVid) => {
+  let targetVid = specificVid;
+  if (!targetVid) {
+    const keys = Array.from(vehicleMarkers.keys());
+    targetVid = keys.length > 0 ? keys[0] : "esp32-ruet-01";
+  }
+
+  const localMeta = getVehicleMetadata(targetVid);
+  const vehicleName = localMeta.name || `Vehicle ${targetVid}`;
+  const driverEmail = localMeta.email || emergencyContactEmail;
+  const testDistance = 8; // 8 cm (Critical Proximity)
+
+  showToast(`🚨 Emergency Triggered for ${vehicleName} (Obstacle @ ${testDistance}cm)`, "error");
+  playEmergencySiren();
+
+  try {
+    // 1. Update Firestore vehicle document to DANGER
+    await setDoc(doc(db, "vehicles", targetVid), {
+      status: "DANGER",
+      distance: testDistance,
+      lastUpdate: serverTimestamp()
+    }, { merge: true });
+
+    // 2. Add accident record to Firestore
+    const accidentRef = await addDoc(collection(db, "accidents"), {
+      vehicleId: targetVid,
+      vehicleName: vehicleName,
+      lat: localMeta.lat || RUET_COORDS.lat,
+      lng: localMeta.lng || RUET_COORDS.lng,
+      distance: testDistance,
+      severity: `CRITICAL (Obstacle < ${testDistance} cm)`,
+      timestamp: serverTimestamp(),
+      driverEmail: driverEmail
+    });
+
+    // 3. Trigger emergency modal
+    showAccidentPopupModal(targetVid, {
+      lat: localMeta.lat || RUET_COORDS.lat,
+      lng: localMeta.lng || RUET_COORDS.lng,
+      distance: testDistance,
+      locationName: localMeta.location || "RUET Campus, Rajshahi",
+      vehicleName: vehicleName,
+      severity: `Obstacle < ${testDistance} cm`
+    });
+
+    // 4. Send email dispatch
+    await sendAccidentEmail(accidentRef.id, {
+      vehicleId: targetVid,
+      vehicleName: vehicleName,
+      lat: localMeta.lat || RUET_COORDS.lat,
+      lng: localMeta.lng || RUET_COORDS.lng,
+      distance: testDistance,
+      locationName: localMeta.location || "RUET Campus, Rajshahi",
+      driverEmail: driverEmail
+    });
+  } catch (err) {
+    console.error("Simulation error:", err);
+  }
+};
+
+window.resetVehicleToSafe = async (specificVid) => {
+  let targetVid = specificVid;
+  if (!targetVid) {
+    const keys = Array.from(vehicleMarkers.keys());
+    targetVid = keys.length > 0 ? keys[0] : "esp32-ruet-01";
+  }
+
+  const localMeta = getVehicleMetadata(targetVid);
+  const vehicleName = localMeta.name || `Vehicle ${targetVid}`;
+
+  try {
+    await setDoc(doc(db, "vehicles", targetVid), {
+      status: "SAFE",
+      distance: 100,
+      lastUpdate: serverTimestamp()
+    }, { merge: true });
+
+    showToast(`✅ ${vehicleName} reset to SAFE (Normal: 100 cm)`, "success");
+  } catch (err) {
+    showToast("Reset note: " + err.message, "info");
+  }
+};
+
 function setupSimulator() {
   const btnCrash = document.getElementById("btn-trigger-crash");
   const btnSimMove = document.getElementById("btn-simulate-movement");
