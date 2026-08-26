@@ -47,9 +47,20 @@ const _k1 = "xkeysib-63829d3fc061bc010535209040f04a5f";
 const _k2 = "f2679d2792f4dedbb4070444fd1961c1-MUGF4poCKcxe6mLy";
 const DEFAULT_KEY = _k1 + _k2;
 
+let storedSender = localStorage.getItem("ighs_brevo_sender");
+if (!storedSender || storedSender.includes("@smtp-brevo.com") || storedSender.includes("@gmail.com")) {
+  storedSender = "email@mdnion.xyz";
+  localStorage.setItem("ighs_brevo_sender", storedSender);
+}
+let brevoSenderEmail = storedSender;
+
+let storedEmergencyEmail = localStorage.getItem("ighs_emergency_email");
+if (!storedEmergencyEmail || storedEmergencyEmail.includes("admin@ighs.gov.bd")) {
+  storedEmergencyEmail = "nionnahian@gmail.com";
+  localStorage.setItem("ighs_emergency_email", storedEmergencyEmail);
+}
+let emergencyContactEmail = storedEmergencyEmail;
 let emergencyContactPhone = localStorage.getItem("ighs_emergency_phone") || "01711000000";
-let emergencyContactEmail = localStorage.getItem("ighs_emergency_email") || "nionnahian@gmail.com";
-let brevoSenderEmail = localStorage.getItem("ighs_brevo_sender") || "email@mdnion.xyz";
 let brevoApiKey = localStorage.getItem("ighs_brevo_key") || DEFAULT_KEY;
 
 // Map & Vehicles State
