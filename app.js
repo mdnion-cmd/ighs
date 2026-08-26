@@ -954,55 +954,113 @@ function setupSimulator() {
   if (btnSendTestEmail) {
     btnSendTestEmail.onclick = async () => {
       const email = emailInput ? emailInput.value.trim() : emergencyContactEmail;
-      const sender = senderInput ? senderInput.value.trim() : brevoSenderEmail;
-      const key = brevoKeyInput ? brevoKeyInput.value.trim() : brevoApiKey;
+      const sender = senderInput ? senderInput.value.trim() : (brevoSenderEmail || "b6ba16001@smtp-brevo.com");
       const resultBox = document.getElementById("sms-dispatch-result");
 
       btnSendTestEmail.disabled = true;
       btnSendTestEmail.textContent = "Sending Email...";
 
-      try {
-        const res = await fetch(`${location.origin}/email`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            to: email,
-            senderEmail: sender,
-            vehicleName: "Test Vehicle Unit 1",
-            lat: RUET_COORDS.lat,
-            lng: RUET_COORDS.lng,
-            distance: 8,
-            severity: "CRITICAL (Obstacle < 8 cm)",
-            apiKey: key
-          })
-        });
+      const emailPayload = {
+        to: email,
+        senderEmail: sender,
+        vehicleName: "RUET Vehicle Alpha",
+        lat: RUET_COORDS.lat,
+        lng: RUET_COORDS.lng,
+        distance: 8,
+        severity: "CRITICAL (Obstacle < 8 cm)"
+      };
 
-        const data = await res.json();
+      let isSent = false;
+      let errorDetail = "";
+
+      // 1. Try local server endpoint if on localhost
+      if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
+        try {
+          const res = await fetch(`${location.origin}/email`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(emailPayload)
+          });
+          const text = await res.text();
+          if (text) {
+            const data = JSON.parse(text);
+            if (data && data.success) isSent = true;
+            else if (data && data.error) errorDetail = data.error;
+          }
+        } catch (err) {
+          errorDetail = err.message;
+        }
+      }
+
+      // 2. Direct Cloudflare Pages Fallback via Brevo REST API
+      if (!isSent) {
+        try {
+          const htmlContent = `
+            <div style="font-family:sans-serif; max-width:540px; margin:0 auto; padding:20px; background:#fff; border:1px solid #e2e8f0; border-radius:10px;">
+              <h2 style="color:#dc2626; margin:0 0 10px 0;">🚨 [TEST ALERT] Vehicle Safety Verification</h2>
+              <p><strong>Status:</strong> Emergency Alert System Verified & Active</p>
+              <p><strong>Location:</strong> RUET Campus, Rajshahi</p>
+              <p><strong>GPS:</strong> 24.3636, 88.6283</p>
+              <p><a href="https://maps.google.com/?q=24.3636,88.6283" style="display:inline-block; padding:10px 18px; background:#0f172a; color:#fff; text-decoration:none; border-radius:6px;">View on Google Maps ↗</a></p>
+            </div>
+          `;
+
+          const key = brevoApiKey || localStorage.getItem("ighs_brevo_key") || "";
+          const bRes = await fetch("https://api.brevo.com/v3/smtp/email", {
+            method: "POST",
+            headers: {
+              "accept": "application/json",
+              "content-type": "application/json",
+              "api-key": key
+            },
+            body: JSON.stringify({
+              sender: { name: "IGHS Emergency System", email: sender },
+              to: [{ email: email }],
+              subject: `🚨 [TEST ALERT] Emergency System Verified (${emailPayload.vehicleName})`,
+              htmlContent: htmlContent
+            })
+          });
+
+          const bText = await bRes.text();
+          let bData = {};
+          try { bData = JSON.parse(bText); } catch(e) {}
+
+          if (bRes.ok || (bData && bData.messageId)) {
+            isSent = true;
+          } else {
+            errorDetail = bData?.message || bText || "Brevo API verification error";
+          }
+        } catch (err) {
+          errorDetail = err.message;
+        }
+      }
+
+      if (isSent) {
         if (resultBox) {
           resultBox.style.display = "block";
-          if (data.success) {
-            resultBox.innerHTML = `
-              <div style="background:#dcfce7; border:1px solid #86efac; border-radius:8px; padding:14px; color:#166534; font-size:13.5px;">
-                <strong>✓ Test Emergency Email Sent!</strong><br>
-                Recipient: <code>${data.to}</code> | Sender: <code>${sender}</code><br>
-                Check your email inbox (and Spam folder) for the incident report!
-              </div>
-            `;
-          } else {
-            resultBox.innerHTML = `
-              <div style="background:#fee2e2; border:1px solid #fca5a5; border-radius:8px; padding:14px; color:#991b1b; font-size:13.5px;">
-                <strong>Email Dispatch Note:</strong> ${JSON.stringify(data.brevoResponse || data.error)}
-              </div>
-            `;
-          }
+          resultBox.innerHTML = `
+            <div style="background:#dcfce7; border:1px solid #86efac; border-radius:8px; padding:14px; color:#166534; font-size:13.5px;">
+              <strong>✓ Test Emergency Email Sent!</strong><br>
+              Recipient: <code>${email}</code> | Sender: <code>${sender}</code><br>
+              Check your email inbox (and Spam folder) for the incident report!
+            </div>
+          `;
         }
-        showToast(`Email dispatched to ${email}`, "success");
-      } catch (err) {
-        showToast("Email error: " + err.message, "error");
-      } finally {
-        btnSendTestEmail.disabled = false;
-        btnSendTestEmail.textContent = "📧 Send Test Emergency Email";
+        showToast(`Emergency alert email dispatched to ${email}`, "success");
+      } else {
+        if (resultBox) {
+          resultBox.style.display = "block";
+          resultBox.innerHTML = `
+            <div style="background:#fee2e2; border:1px solid #fca5a5; border-radius:8px; padding:14px; color:#991b1b; font-size:13.5px;">
+              <strong>Email Dispatch Notice:</strong> ${errorDetail || "Check Brevo sender authentication."}
+            </div>
+          `;
+        }
+        showToast(`Email error: ${errorDetail || 'Check sender email'}`, "error");
       }
+
+      btnSendTestEmail.disabled = false;
+      btnSendTestEmail.textContent = "📧 Send Test Emergency Alert Email";
     };
   }
 }
