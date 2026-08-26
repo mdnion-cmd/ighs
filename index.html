@@ -338,14 +338,26 @@
                 <span class="demo-label">The verified sender address authenticated in Brevo & Cloudflare.</span>
               </div>
 
+              <!-- Brevo API Key -->
+              <div class="form-group">
+                <label class="form-label" for="brevo-key-input">Brevo API Key (REST / Cloudflare Direct)</label>
+                <input
+                  id="brevo-key-input"
+                  class="form-input"
+                  type="password"
+                  placeholder="Paste your Brevo API key here"
+                  autocomplete="off" />
+                <span class="demo-label">Used by Cloudflare Pages to send emails directly via Brevo API.</span>
+              </div>
+
               <!-- Brevo Key Status -->
               <div class="form-group">
-                <label class="form-label" for="brevo-key-input">Brevo SMTP Relay Status</label>
+                <label class="form-label">Brevo Relay Status</label>
                 <div style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; font-size: 13px; color: #166534; font-weight: 600;">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="20 6 9 17 4 12"></polyline>
                   </svg>
-                  <span>SMTP Connected: <code>smtp-relay.brevo.com:587</code> (Authenticated)</span>
+                  <span>SMTP & API Connected: <code>smtp-relay.brevo.com:587</code> (Authenticated)</span>
                 </div>
               </div>
 
