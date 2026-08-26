@@ -1,0 +1,27 @@
+{
+  "name": "ighs-dashboard",
+  "version": "1.0.0",
+  "description": "IGHS — Smart Vehicle Tracking, Firebase RBAC Dashboard, and Accident Monitoring with SMS alerts",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "sms-mock": "node sms-mock-server.js"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "keywords": [
+    "firebase",
+    "rbac",
+    "esp32",
+    "dashboard",
+    "sms"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@isomorphic-git/lightning-fs": "^4.7.0",
+    "isomorphic-git": "^1.41.9",
+    "nodemailer": "^9.0.5"
+  }
+}
